@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — EventAI</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="logo">
+      <i class="ti ti-map-pin"></i>
+      <span>event<strong>ai</strong></span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Find events</a>
+      <span id="venue-name-nav" style="font-size:14px;color:var(--text-muted)"></span>
+      <a href="#" onclick="handleLogout()">Logout</a>
+    </div>
+  </nav>
+
+  <div class="dashboard">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+      <div>
+        <h2 id="venue-title">My venue</h2>
+        <p style="font-size:13px;color:var(--text-muted)" id="venue-location"></p>
+      </div>
+      <button class="btn btn-primary" onclick="toggleForm()">
+        <i class="ti ti-plus"></i> New event
+      </button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-events">0</div>
+        <div class="stat-label">active events</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-upcoming">0</div>
+        <div class="stat-label">upcoming</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">Free</div>
+        <div class="stat-label">current plan</div>
+      </div>
+    </div>
+
+    <div id="event-form" style="display:none;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem">
+      <h3 style="font-size:16px;font-weight:500;margin-bottom:1rem" id="form-title">New event</h3>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="form-group">
+          <label>Event title</label>
+          <input type="text" id="f-title" placeholder="e.g. Jazz aperitivo" />
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="f-date" />
+          </div>
+          <div class="form-group">
+            <label>Time</label>
+            <input type="time" id="f-time" />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Category</label>
+            <select id="f-category">
+              <option value="music">Music</option>
+              <option value="food">Food</option>
+              <option value="art">Art</option>
+              <option value="sport">Sport</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Entry</label>
+            <select id="f-entry">
+              <option value="free">Free</option>
+              <option value="paid">Paid</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" id="f-address" placeholder="e.g. Via Roma 12, Milan" />
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="f-description" placeholder="Tell us about your event..."></textarea>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="saveEvent()">
+            <i class="ti ti-circle-check"></i> Publish event
+          </button>
+          <button class="btn btn-secondary" onclick="toggleForm()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="events-table" id="events-list">
+      <div class="table-row" style="color:var(--text-muted);font-size:14px;justify-content:center">
+        Loading your events...
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script>
+    let currentSession = null;
+    let venueEvents = [];
+    let editingEventId = null;
+
+    const CATEGORY_ICONS = {
+      music: { icon: 'ti-music', bg: '#EEEDFE', color: '#534AB7' },
+      food: { icon: 'ti-tools-kitchen-2', bg: '#FAECE7', color: '#993C1D' },
+      art: { icon: 'ti-palette', bg: '#FAEEDA', color: '#854F0B' },
+      sport: { icon: 'ti-ball-football', bg: '#E1F5EE', color: '#0F6E56' },
+      other: { icon: 'ti-calendar', bg: '#F1EFE8', color: '#5F5E5A' },
+    };
+
+    async function init() {
+      const session = await API.getSession();
+      if (!session) {
+        window.location.href = 'login.html';
+        return;
+      }
+      currentSession = session;
+
+      const meta = session.user.user_metadata;
+      document.getElementById('venue-title').textContent = meta.venue_name || 'My venue';
+      document.getElementById('venue-name-nav').textContent = meta.venue_name || '';
+      document.getElementById('venue-location').textContent =
+        [meta.neighborhood, meta.city].filter(Boolean).join(', ');
+
+      await loadEvents();
+    }
+
+    async function loadEvents() {
+      try {
+        venueEvents = await API.getVenueEvents(currentSession.user.id);
+        renderEvents();
+        updateStats();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function updateStats() {
+      const today = new Date().toISOString().split('T')[0];
+      const active = venueEvents.filter(e => e.active).length;
+      const upcoming = venueEvents.filter(e => e.active && e.date >= today).length;
+      document.getElementById('stat-events').textContent = active;
+      document.getElementById('stat-upcoming').textContent = upcoming;
+    }
+
+    function renderEvents() {
+      const list = document.getElementById('events-list');
+      if (venueEvents.length === 0) {
+        list.innerHTML = '<div class="table-row" style="color:var(--text-muted);font-size:14px;justify-content:center">No events yet. Add your first one!</div>';
+        return;
+      }
+
+      list.innerHTML = venueEvents.map(event => {
+        const style = CATEGORY_ICONS[event.category] || CATEGORY_ICONS.other;
+        const date = new Date(event.date).toLocaleDateString('en-GB', {
+          weekday: 'short', day: 'numeric', month: 'short'
+        });
+        const isActive = event.active;
+        return `
+          <div class="table-row">
+            <div style="width:34px;height:34px;border-radius:8px;background:${style.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="ti ${style.icon}" style="color:${style.color};font-size:17px"></i>
+            </div>
+            <div class="row-info">
+              <div class="row-title">${event.title}</div>
+              <div class="row-sub">${date}${event.time ? ' · ' + event.time.slice(0,5) : ''} · ${event.entry || 'free'}</div>
+            </div>
+            <span class="status-badge ${isActive ? 'status-live' : 'status-draft'}">${isActive ? 'live' : 'draft'}</span>
+            <div class="row-actions">
+              <button class="icon-btn" onclick="editEvent('${event.id}')" title="Edit">
+                <i class="ti ti-edit"></i>
+              </button>
+              <button class="icon-btn" onclick="deleteEvent('${event.id}')" title="Delete">
+                <i class="ti ti-trash"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleForm() {
+      const form = document.getElementById('event-form');
+      const isVisible = form.style.display !== 'none';
+      if (isVisible) {
+        form.style.display = 'none';
+        resetForm();
+      } else {
+        form.style.display = 'block';
+        document.getElementById('form-title').textContent = 'New event';
+      }
+    }
+
+    function resetForm() {
+      editingEventId = null;
+      document.getElementById('f-title').value = '';
+      document.getElementById('f-date').value = '';
+      document.getElementById('f-time').value = '';
+      document.getElementById('f-category').value = 'music';
+      document.getElementById('f-entry').value = 'free';
+      document.getElementById('f-address').value = '';
+      document.getElementById('f-description').value = '';
+    }
+
+    function editEvent(id) {
+      const event = venueEvents.find(e => e.id === id);
+      if (!event) return;
+      editingEventId = id;
+      document.getElementById('f-title').value = event.title || '';
+      document.getElementById('f-date').value = event.date || '';
+      document.getElementById('f-time').value = event.time ? event.time.slice(0,5) : '';
+      document.getElementById('f-category').value = event.category || 'other';
+      document.getElementById('f-entry').value = event.entry || 'free';
+      document.getElementById('f-address').value = event.address || '';
+      document.getElementById('f-description').value = event.description || '';
+      document.getElementById('form-title').textContent = 'Edit event';
+      document.getElementById('event-form').style.display = 'block';
+      document.getElementById('event-form').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function saveEvent() {
+      const title = document.getElementById('f-title').value.trim();
+      const date = document.getElementById('f-date').value;
+      if (!title || !date) {
+        alert('Please fill in at least the title and date.');
+        return;
+      }
+
+      const eventData = {
+        title,
+        date,
+        time: document.getElementById('f-time').value || null,
+        category: document.getElementById('f-category').value,
+        entry: document.getElementById('f-entry').value,
+        address: document.getElementById('f-address').value.trim() || null,
+        description: document.getElementById('f-description').value.trim() || null,
+        active: true,
+      };
+
+      try {
+        if (editingEventId) {
+          await API.updateEvent(editingEventId, eventData);
+        } else {
+          await API.addEvent(currentSession.user.id, eventData);
+        }
+        toggleForm();
+        await loadEvents();
+      } catch (err) {
+        alert('Error saving event: ' + err.message);
+      }
+    }
+
+    async function deleteEvent(id) {
+      if (!confirm('Are you sure you want to delete this event?')) return;
+      try {
+        await API.deleteEvent(id);
+        await loadEvents();
+      } catch (err) {
+        alert('Error deleting event: ' + err.message);
+      }
+    }
+
+    async function handleLogout() {
+      await API.signOut();
+      window.location.href = 'login.html';
+    }
+
+    init();
+  </script>
+
+</body>
+</html>
