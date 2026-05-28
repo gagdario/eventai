@@ -62,7 +62,7 @@ var API = {
     return result.data || [];
   },
 
-  async signUp(email, password, venueName, address, neighborhood, description) {
+async signUp(email, password, venueName, address, neighborhood, description) {
     var db = getDB();
     var result = await db.auth.signUp({
       email,
@@ -71,9 +71,10 @@ var API = {
         data: {
           venue_name: venueName || '',
           address: address || '',
+          city: '',
           neighborhood: neighborhood || '',
           description: description || '',
-          is_venue: !!venueName,
+          is_venue: venueName ? 'true' : 'false',
         }
       }
     });
