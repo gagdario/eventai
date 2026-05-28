@@ -41,9 +41,8 @@
       </button>
     </div>
     <div class="dropdown" id="dropdown">
-      <div class="dd-item" onclick="showSaved()">
-        <i class="ti ti-bookmark"></i> Eventi salvati
-        <span class="saved-badge" id="saved-count" style="display:none">0</span>
+      <div class="dd-item" onclick="showEditAccount()">
+        <i class="ti ti-settings"></i> Modifica account
       </div>
       <div class="dd-item dd-red" onclick="handleLogout()">
         <i class="ti ti-logout"></i> Logout
@@ -121,7 +120,7 @@
         </div>
 
         <div class="add-form" id="add-form">
-          <div class="form-title">Nuovo evento</div>
+          <div class="form-title" id="form-title">Nuovo evento</div>
           <div class="fg">
             <label>Nome evento <span class="req">*</span></label>
             <input type="text" id="ev-name" placeholder="es. Jazz night, aperitivo, DJ set..." />
@@ -152,10 +151,10 @@
             <textarea id="ev-desc" placeholder="Scrivi liberamente — più informazioni fornisci, più l'AI riuscirà a trovare il tuo evento e raggiungere il cliente giusto. Non preoccuparti del formato, ci pensa l'AI."></textarea>
           </div>
           <div class="form-actions">
-            <button class="btn-primary" onclick="addEvent()" id="add-btn">
+            <button class="btn-primary" onclick="saveEvent()" id="add-btn">
               <i class="ti ti-sparkles"></i> Pubblica con AI
             </button>
-            <button class="btn-ghost" onclick="toggleAddForm()">Annulla</button>
+            <button class="btn-ghost" onclick="cancelForm()">Annulla</button>
           </div>
           <div class="alert-error" id="ev-error"></div>
           <div class="alert-success" id="ev-success"></div>
@@ -164,6 +163,39 @@
         <div class="section-label">I tuoi eventi</div>
         <div class="ev-table" id="ev-table">
           <div class="empty-state">Caricamento eventi...</div>
+        </div>
+      </div>
+
+      <div id="edit-account-form" style="display:none">
+        <div class="dash-header">
+          <div>
+            <div class="dash-name">Modifica account</div>
+          </div>
+          <button class="btn-ghost btn-sm" onclick="hideEditAccount()">
+            <i class="ti ti-arrow-left"></i> Indietro
+          </button>
+        </div>
+        <div class="add-form open">
+          <div class="fg">
+            <label>Nome locale <span class="req">*</span></label>
+            <input type="text" id="edit-venue-name" placeholder="es. Frida Kahlo Café" />
+          </div>
+          <div class="fg">
+            <label>Indirizzo</label>
+            <input type="text" id="edit-venue-address" placeholder="es. Via Corsico 1, Milano" />
+          </div>
+          <div class="fg">
+            <label>Descrizione</label>
+            <textarea id="edit-venue-desc" placeholder="Descrivi il tuo locale..."></textarea>
+          </div>
+          <div class="alert-error" id="edit-error"></div>
+          <div class="alert-success" id="edit-success"></div>
+          <div class="form-actions">
+            <button class="btn-primary" onclick="saveAccount()">
+              <i class="ti ti-check"></i> Salva modifiche
+            </button>
+            <button class="btn-ghost" onclick="hideEditAccount()">Annulla</button>
+          </div>
         </div>
       </div>
     </div>
@@ -210,7 +242,7 @@
             <input type="password" id="r-venue-pass" placeholder="min. 8 caratteri" />
           </div>
           <div class="alert-error" id="r-venue-error"></div>
-          <button class="btn-primary" onclick="registerVenue()" style="width:100%">
+          <button class="btn-primary" onclick="registerVenue()">
             <i class="ti ti-building-store"></i> Crea account locale
           </button>
           <p class="auth-link">Hai già un account? <a onclick="showLoginForm()">Accedi</a></p>
@@ -227,7 +259,7 @@
             <input type="password" id="r-user-pass" placeholder="min. 8 caratteri" />
           </div>
           <div class="alert-error" id="r-user-error"></div>
-          <button class="btn-primary" onclick="registerUser()" style="width:100%">
+          <button class="btn-primary" onclick="registerUser()">
             <i class="ti ti-user"></i> Crea account
           </button>
           <p class="auth-link">Hai già un account? <a onclick="showLoginForm()">Accedi</a></p>
@@ -244,10 +276,10 @@
             <input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginUser()" />
           </div>
           <div class="alert-error" id="l-error"></div>
-          <button class="btn-primary" onclick="loginUser()" style="width:100%">
+          <button class="btn-primary" onclick="loginUser()">
             <i class="ti ti-login"></i> Accedi
           </button>
-          <p class="auth-link">Non hai un account? <a onclick="document.getElementById('form-login').className='reg-form';document.getElementById('form-venue').className='reg-form on'">Registrati</a></p>
+          <p class="auth-link">Non hai un account? <a onclick="selectOpt('venue')">Registrati</a></p>
         </div>
       </div>
     </div>
@@ -257,11 +289,10 @@
 
 <script>
 var currentSession = null;
-var currentUser = null;
 var allEvents = [];
 var venueEvents = [];
-var savedEvents = [];
 var isSearching = false;
+var editingEventId = null;
 
 function checkPassword() {
   var val = document.getElementById('gate-input').value;
@@ -294,14 +325,14 @@ async function initApp(){
 function onLoggedIn(session){
   currentSession = session;
   var meta = session.user.user_metadata;
-  var name = meta.venue_name || meta.display_name || session.user.email.split('@')[0];
+  var name = meta.venue_name || session.user.email.split('@')[0];
   document.getElementById('login-label').textContent = name;
   document.getElementById('login-icon').className = 'ti ti-settings';
   if(meta.venue_name){
     document.getElementById('venues-wall').style.display = 'none';
     document.getElementById('venues-dash').style.display = 'block';
     document.getElementById('dash-name').textContent = meta.venue_name;
-    document.getElementById('dash-loc').textContent = [meta.neighborhood, meta.city].filter(Boolean).join(', ');
+    document.getElementById('dash-loc').textContent = meta.address || '';
     loadVenueEvents();
   }
 }
@@ -337,9 +368,48 @@ async function handleLogout(){
   document.getElementById('dropdown').className='dropdown';
   document.getElementById('venues-wall').style.display='flex';
   document.getElementById('venues-dash').style.display='none';
-  savedEvents=[];
-  document.getElementById('saved-count').textContent='0';
-  document.getElementById('saved-count').style.display='none';
+  document.getElementById('edit-account-form').style.display='none';
+}
+
+function showEditAccount(){
+  document.getElementById('dropdown').className='dropdown';
+  showTab('venues');
+  var meta = currentSession.user.user_metadata;
+  document.getElementById('edit-venue-name').value = meta.venue_name || '';
+  document.getElementById('edit-venue-address').value = meta.address || '';
+  document.getElementById('edit-venue-desc').value = meta.description || '';
+  document.getElementById('venues-dash').style.display='none';
+  document.getElementById('venues-wall').style.display='none';
+  document.getElementById('edit-account-form').style.display='block';
+}
+
+function hideEditAccount(){
+  document.getElementById('edit-account-form').style.display='none';
+  document.getElementById('venues-dash').style.display='block';
+}
+
+async function saveAccount(){
+  var name = document.getElementById('edit-venue-name').value.trim();
+  var address = document.getElementById('edit-venue-address').value.trim();
+  var desc = document.getElementById('edit-venue-desc').value.trim();
+  var err = document.getElementById('edit-error');
+  var suc = document.getElementById('edit-success');
+  err.style.display='none'; suc.style.display='none';
+  if(!name){ err.textContent='Il nome è obbligatorio.'; err.style.display='block'; return; }
+  try {
+    await API.updateUserMeta({ venue_name: name, address: address, description: desc });
+    var s = await API.getSession();
+    currentSession = s;
+    document.getElementById('login-label').textContent = name;
+    document.getElementById('dash-name').textContent = name;
+    document.getElementById('dash-loc').textContent = address;
+    suc.textContent = 'Modifiche salvate!';
+    suc.style.display = 'block';
+    setTimeout(function(){ hideEditAccount(); }, 1500);
+  } catch(e){
+    err.textContent = 'Errore: ' + e.message;
+    err.style.display = 'block';
+  }
 }
 
 function selectOpt(type){
@@ -370,8 +440,7 @@ async function registerVenue(){
   if(pass.length<8){err.textContent='Password di almeno 8 caratteri.';err.style.display='block';return;}
   try {
     await API.signUp(email,pass,name,addr,'',desc);
-    err.style.display='none';
-    alert('Account creato! Controlla la tua email per confermare, poi accedi.');
+    alert('Account creato! Accedi ora.');
     showLoginForm();
   } catch(e){err.textContent=e.message;err.style.display='block';}
 }
@@ -385,7 +454,7 @@ async function registerUser(){
   if(pass.length<8){err.textContent='Password di almeno 8 caratteri.';err.style.display='block';return;}
   try {
     await API.signUp(email,pass,'','','','');
-    alert('Account creato! Controlla la tua email per confermare, poi accedi.');
+    alert('Account creato! Accedi ora.');
     showLoginForm();
   } catch(e){err.textContent=e.message;err.style.display='block';}
 }
@@ -418,7 +487,31 @@ async function venueLogin(){
 function toggleAddForm(){
   var f=document.getElementById('add-form');
   f.className=f.className.includes('open')?'add-form':'add-form open';
-  if(f.className.includes('open')) f.scrollIntoView({behavior:'smooth',block:'nearest'});
+  if(f.className.includes('open')){
+    editingEventId=null;
+    document.getElementById('form-title').textContent='Nuovo evento';
+    resetForm();
+    f.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+}
+
+function cancelForm(){
+  document.getElementById('add-form').className='add-form';
+  editingEventId=null;
+  resetForm();
+}
+
+function resetForm(){
+  document.getElementById('ev-name').value='';
+  document.getElementById('ev-date').value='';
+  document.getElementById('ev-time').value='';
+  document.getElementById('ev-date-to').value='';
+  document.getElementById('ev-location').value='';
+  document.getElementById('ev-desc').value='';
+  document.getElementById('ev-multiday').checked=false;
+  document.getElementById('multiday-row').className='multiday-row';
+  document.getElementById('ev-error').style.display='none';
+  document.getElementById('ev-success').style.display='none';
 }
 
 function toggleMultiday(){
@@ -439,17 +532,46 @@ function renderVenueEvents(){
     table.innerHTML='<div class="empty-state">Nessun evento ancora. Aggiungine uno!</div>';
     return;
   }
-  var icons={music:{i:'ti-music',bg:'#eef2ff',c:'#4338ca'},food:{i:'ti-tools-kitchen-2',bg:'#fff7ed',c:'#c2410c'},art:{i:'ti-palette',bg:'#fefce8',c:'#a16207'},sport:{i:'ti-ball-football',bg:'#f0fdf4',c:'#15803d'},other:{i:'ti-calendar',bg:'#f8fafc',c:'#64748b'}};
   table.innerHTML=venueEvents.map(function(ev){
-    var s=icons[ev.category]||icons.other;
     var d=ev.date?new Date(ev.date).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}):'Data TBD';
     if(ev.date_to) d+=' → '+new Date(ev.date_to).toLocaleDateString('it-IT',{day:'numeric',month:'short'});
     if(ev.time) d+=' · '+ev.time.slice(0,5);
-    return '<div class="ev-row"><div class="ev-ic" style="background:'+s.bg+'"><i class="ti '+s.i+'" style="color:'+s.c+'"></i></div><div class="ev-info"><div class="ev-title">'+ev.title+'</div><div class="ev-sub">'+d+'</div></div><div class="ev-acts"><button class="ic-btn" onclick="deleteEvent(\''+ev.id+'\')" aria-label="Elimina"><i class="ti ti-trash"></i></button></div></div>';
+    var loc=ev.address||ev.location||'';
+    var desc=ev.description||'';
+    return '<div class="ev-row">'+
+      '<div class="ev-info">'+
+        '<div class="ev-title">'+ev.title+'</div>'+
+        '<div class="ev-sub">'+d+(loc?' · <i class="ti ti-map-pin"></i> '+loc:'')+'</div>'+
+        (desc?'<div class="ev-desc-preview">'+desc.substring(0,100)+(desc.length>100?'...':'')+'</div>':'')+
+      '</div>'+
+      '<div class="ev-acts">'+
+        '<button class="ic-btn" onclick="editEvent(\''+ev.id+'\')" aria-label="Modifica"><i class="ti ti-edit"></i></button>'+
+        '<button class="ic-btn" onclick="deleteEvent(\''+ev.id+'\')" aria-label="Elimina"><i class="ti ti-trash"></i></button>'+
+      '</div>'+
+    '</div>';
   }).join('');
 }
 
-async function addEvent(){
+function editEvent(id){
+  var ev=venueEvents.find(function(e){return e.id===id;});
+  if(!ev) return;
+  editingEventId=id;
+  document.getElementById('form-title').textContent='Modifica evento';
+  document.getElementById('ev-name').value=ev.title||'';
+  document.getElementById('ev-date').value=ev.date||'';
+  document.getElementById('ev-time').value=ev.time?ev.time.slice(0,5):'';
+  document.getElementById('ev-location').value=ev.address||ev.location||'';
+  document.getElementById('ev-desc').value=ev.description||'';
+  if(ev.date_to){
+    document.getElementById('ev-multiday').checked=true;
+    document.getElementById('multiday-row').className='multiday-row open';
+    document.getElementById('ev-date-to').value=ev.date_to;
+  }
+  document.getElementById('add-form').className='add-form open';
+  document.getElementById('add-form').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+async function saveEvent(){
   var name=document.getElementById('ev-name').value.trim();
   var date=document.getElementById('ev-date').value;
   var time=document.getElementById('ev-time').value;
@@ -469,23 +591,20 @@ async function addEvent(){
       try {
         var res=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:desc})});
         var ex=await res.json();
-        if(ex.category) eventData.category=ex.category;
         if(ex.entry) eventData.entry=ex.entry;
         if(ex.description) eventData.description=ex.description;
       } catch(e){}
     }
-    await API.addEvent(currentSession.user.id,eventData);
-    suc.textContent='Evento pubblicato!'; suc.style.display='block';
-    document.getElementById('ev-name').value='';
-    document.getElementById('ev-date').value='';
-    document.getElementById('ev-time').value='';
-    document.getElementById('ev-date-to').value='';
-    document.getElementById('ev-location').value='';
-    document.getElementById('ev-desc').value='';
-    document.getElementById('ev-multiday').checked=false;
-    document.getElementById('multiday-row').className='multiday-row';
+    if(editingEventId){
+      await API.updateEvent(editingEventId,eventData);
+      suc.textContent='Evento modificato!';
+    } else {
+      await API.addEvent(currentSession.user.id,eventData);
+      suc.textContent='Evento pubblicato!';
+    }
+    suc.style.display='block';
     await loadVenueEvents();
-    setTimeout(function(){suc.style.display='none';toggleAddForm();},2000);
+    setTimeout(function(){cancelForm();},1500);
   } catch(e){err.textContent='Errore: '+e.message;err.style.display='block';}
   btn.disabled=false; btn.innerHTML='<i class="ti ti-sparkles"></i> Pubblica con AI';
 }
@@ -493,37 +612,6 @@ async function addEvent(){
 async function deleteEvent(id){
   if(!confirm('Eliminare questo evento?')) return;
   try{await API.deleteEvent(id);await loadVenueEvents();}catch(e){alert('Errore: '+e.message);}
-}
-
-function saveEvent(eventObj, btn){
-  savedEvents.push(eventObj);
-  btn.innerHTML='<i class="ti ti-bookmark-filled"></i>';
-  btn.style.color='#e24b4a';
-  var c=document.getElementById('saved-count');
-  c.textContent=savedEvents.length;
-  c.style.display='inline';
-}
-
-function showSaved(){
-  document.getElementById('dropdown').className='dropdown';
-  showTab('find');
-  var box=document.getElementById('chat-box');
-  var msg=document.createElement('div'); msg.className='msg ai';
-  var content=savedEvents.length>0
-    ?'<div class="saved-list">'+savedEvents.map(function(e,i){
-        return '<div class="saved-item"><div><div class="ev-title">'+e.title+'</div><div class="ev-sub">'+(e.date?new Date(e.date).toLocaleDateString('it-IT',{day:'numeric',month:'short'}):'')+(e.venues?' · '+e.venues.name:'')+'</div></div><button class="ic-btn" onclick="removeSaved('+i+',this)" aria-label="Rimuovi"><i class="ti ti-x"></i></button></div>';
-      }).join('')+'</div>'
-    :'<span style="color:#aaa">Nessun evento salvato ancora.</span>';
-  msg.innerHTML='<div class="av ai">E</div><div class="bub"><div class="saved-title">I tuoi eventi salvati</div>'+content+'</div>';
-  box.appendChild(msg); box.scrollTop=box.scrollHeight;
-}
-
-function removeSaved(i, btn){
-  savedEvents.splice(i,1);
-  btn.closest('.saved-item').remove();
-  var c=document.getElementById('saved-count');
-  c.textContent=savedEvents.length;
-  if(savedEvents.length===0) c.style.display='none';
 }
 
 async function sendMessage(){
@@ -548,10 +636,13 @@ function buildCard(e){
   var isFree=(e.entry||'').toLowerCase()==='free'||(e.entry||'').toLowerCase()==='gratuito';
   var d=e.date?new Date(e.date).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}):'';
   if(e.time) d+=' · '+e.time.slice(0,5);
-  var cats={music:{bg:'#eef2ff',c:'#4338ca',i:'ti-music'},food:{bg:'#fff7ed',c:'#c2410c',i:'ti-tools-kitchen-2'},art:{bg:'#fefce8',c:'#a16207',i:'ti-palette'},sport:{bg:'#f0fdf4',c:'#15803d',i:'ti-ball-football'},other:{bg:'#f8fafc',c:'#64748b',i:'ti-calendar'}};
-  var s=cats[e.category]||cats.other;
-  var ev=e;
-  return '<div class="ev-card"><div class="ev-ic" style="background:'+s.bg+'"><i class="ti '+s.i+'" style="color:'+s.c+'"></i></div><div class="ev-info"><div class="ev-title">'+e.title+'</div><div class="ev-sub">'+(e.venues?'<i class="ti ti-map-pin"></i> '+e.venues.name+(e.venues.neighborhood?' · '+e.venues.neighborhood:''):'')+' '+d+'</div><div class="ev-badges"><span class="bdg '+(isFree?'bdg-free':'bdg-paid')+'">'+(isFree?'gratuito':'a pagamento')+'</span></div></div><button class="save-btn" onclick="saveEvent('+JSON.stringify(e).replace(/"/g,"'")+',this)" aria-label="Salva"><i class="ti ti-bookmark"></i></button></div>';
+  return '<div class="ev-card">'+
+    '<div class="ev-info">'+
+      '<div class="ev-title">'+e.title+'</div>'+
+      '<div class="ev-sub">'+(e.venues?'<i class="ti ti-map-pin"></i> '+e.venues.venue_name+(e.venues.address?' · '+e.venues.address:''):'')+' '+d+'</div>'+
+      '<div class="ev-badges"><span class="bdg '+(isFree?'bdg-free':'bdg-paid')+'">'+(isFree?'gratuito':'a pagamento')+'</span></div>'+
+    '</div>'+
+  '</div>';
 }
 
 function addMsg(html,type){
