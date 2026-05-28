@@ -1,109 +1,170 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Register your venue — EventAI</title>
+  <title>Registrati — EventAI</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
-</head>
-<body>
-
-  <nav class="navbar">
-    <div class="logo">
-      <i class="ti ti-map-pin"></i>
-      <span>event<strong>ai</strong></span>
-    </div>
-    <div class="nav-links">
-      <a href="index.html">Find events</a>
-      <a href="venue.html">For venues</a>
-      <a href="login.html">Login</a>
-    </div>
-  </nav>
-
-  <div class="auth-container">
-    <div class="auth-card">
-      <h2>Register your venue</h2>
-      <p style="font-size:13px;color:var(--text-muted)">Free for the first 3 months. No credit card required.</p>
-
-      <div class="alert alert-error" id="error-msg"></div>
-      <div class="alert alert-success" id="success-msg"></div>
-
-      <div class="form-group">
-        <label>Venue name</label>
-        <input type="text" id="venue-name" placeholder="e.g. Frida Kahlo Café" />
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label>City</label>
-          <input type="text" id="city" placeholder="e.g. Milan" />
-        </div>
-        <div class="form-group">
-          <label>Neighborhood</label>
-          <input type="text" id="neighborhood" placeholder="e.g. Navigli" />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="email" placeholder="your@email.com" />
-      </div>
-
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="password" placeholder="min. 8 characters" />
-      </div>
-
-      <button class="btn btn-primary" onclick="handleRegister()" style="width:100%;justify-content:center">
-        <i class="ti ti-building-store"></i> Register venue
-      </button>
-
-      <p class="auth-link">
-        Already have an account? <a href="login.html">Login</a>
-      </p>
-    </div>
-  </div>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script src="api.js"></script>
-  <script>
-    async function handleRegister() {
-      const venueName = document.getElementById('venue-name').value.trim();
-      const city = document.getElementById('city').value.trim();
-      const neighborhood = document.getElementById('neighborhood').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const errorMsg = document.getElementById('error-msg');
-      const successMsg = document.getElementById('success-msg');
+</head>
+<body>
 
-      errorMsg.style.display = 'none';
-      successMsg.style.display = 'none';
+<div id="app" style="display:block">
+  <nav class="navbar">
+    <div class="logo" onclick="window.location.href='index.html'">event<span>ai</span></div>
+    <div class="nav-tabs">
+      <button class="nt" onclick="window.location.href='index.html'">
+        <i class="ti ti-arrow-left"></i>
+        <span>Torna indietro</span>
+      </button>
+    </div>
+  </nav>
 
-      if (!venueName || !city || !email || !password) {
-        errorMsg.textContent = 'Please fill in all required fields.';
-        errorMsg.style.display = 'block';
-        return;
-      }
+  <div class="page-wrap">
+    <div class="login-wrap">
+      <h2 class="login-title">Registrati su EventAI</h2>
+      <p class="login-sub">Scegli il tipo di account</p>
 
-      if (password.length < 8) {
-        errorMsg.textContent = 'Password must be at least 8 characters.';
-        errorMsg.style.display = 'block';
-        return;
-      }
+      <div class="login-opts">
+        <div class="login-opt" id="opt-venue" onclick="selectOpt('venue')">
+          <i class="ti ti-building-store"></i>
+          <div class="opt-title">Sono un locale</div>
+          <div class="opt-desc">Voglio pubblicare i miei eventi</div>
+        </div>
+        <div class="login-opt" id="opt-user" onclick="selectOpt('user')">
+          <i class="ti ti-search"></i>
+          <div class="opt-title">Sono un utente</div>
+          <div class="opt-desc">Voglio cercare eventi</div>
+        </div>
+      </div>
 
-      try {
-        await API.signUp(email, password, venueName, city, neighborhood);
-        successMsg.textContent = 'Account created! Check your email to confirm your address, then login.';
-        successMsg.style.display = 'block';
-        setTimeout(() => window.location.href = 'login.html', 3000);
-      } catch (err) {
-        errorMsg.textContent = err.message || 'Registration failed. Please try again.';
-        errorMsg.style.display = 'block';
-      }
-    }
-  </script>
+      <div id="form-venue" class="reg-form">
+        <div class="form-title">Registra il tuo locale</div>
+        <div class="fg">
+          <label>Nome locale <span class="req">*</span></label>
+          <input type="text" id="r-venue-name" placeholder="es. Frida Kahlo Café" />
+        </div>
+        <div class="fg">
+          <label>Descrizione <span class="opt">facoltativa</span></label>
+          <textarea id="r-venue-desc" placeholder="Descriviti — queste info verranno usate dall'AI per rispondere meglio agli utenti"></textarea>
+        </div>
+        <div class="fg">
+          <label>Indirizzo <span class="req">*</span></label>
+          <input type="text" id="r-venue-addr" placeholder="es. Via Corsico 1, Milano" />
+        </div>
+        <div class="fg">
+          <label>Email <span class="req">*</span></label>
+          <input type="email" id="r-venue-email" placeholder="tuo@locale.it" />
+        </div>
+        <div class="fg">
+          <label>Password <span class="req">*</span></label>
+          <input type="password" id="r-venue-pass" placeholder="min. 8 caratteri" />
+        </div>
+        <div class="alert-error" id="r-venue-error"></div>
+        <button class="btn-primary" onclick="registerVenue()">
+          <i class="ti ti-building-store"></i> Crea account locale
+        </button>
+        <p class="auth-link">Hai già un account? <a onclick="window.location.href='index.html'">Accedi</a></p>
+      </div>
 
+      <div id="form-user" class="reg-form">
+        <div class="form-title">Crea il tuo account</div>
+        <div class="fg">
+          <label>Email <span class="req">*</span></label>
+          <input type="email" id="r-user-email" placeholder="tua@email.it" />
+        </div>
+        <div class="fg">
+          <label>Password <span class="req">*</span></label>
+          <input type="password" id="r-user-pass" placeholder="min. 8 caratteri" />
+        </div>
+        <div class="alert-error" id="r-user-error"></div>
+        <button class="btn-primary" onclick="registerUser()">
+          <i class="ti ti-user"></i> Crea account
+        </button>
+        <p class="auth-link">Hai già un account? <a onclick="window.location.href='index.html'">Accedi</a></p>
+      </div>
+
+      <div id="success-msg" style="display:none">
+        <div class="alert-success" style="display:block;text-align:center;padding:1.5rem">
+          <i class="ti ti-circle-check" style="font-size:32px;display:block;margin-bottom:8px"></i>
+          <div style="font-size:16px;font-weight:600;margin-bottom:4px">Account creato!</div>
+          <div style="font-size:14px">Controlla la tua email per confermare l'account, poi accedi.</div>
+        </div>
+        <button class="btn-primary" onclick="window.location.href='index.html'" style="margin-top:12px">
+          <i class="ti ti-arrow-left"></i> Torna alla home
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function selectOpt(type) {
+  document.getElementById('opt-venue').className = 'login-opt' + (type === 'venue' ? ' active' : '');
+  document.getElementById('opt-user').className = 'login-opt' + (type === 'user' ? ' active' : '');
+  document.getElementById('form-venue').className = 'reg-form' + (type === 'venue' ? ' on' : '');
+  document.getElementById('form-user').className = 'reg-form' + (type === 'user' ? ' on' : '');
+}
+
+async function registerVenue() {
+  var name = document.getElementById('r-venue-name').value.trim();
+  var addr = document.getElementById('r-venue-addr').value.trim();
+  var email = document.getElementById('r-venue-email').value.trim();
+  var pass = document.getElementById('r-venue-pass').value;
+  var desc = document.getElementById('r-venue-desc').value.trim();
+  var err = document.getElementById('r-venue-error');
+  err.style.display = 'none';
+  if (!name || !addr || !email || !pass) {
+    err.textContent = 'Compila tutti i campi obbligatori.';
+    err.style.display = 'block';
+    return;
+  }
+  if (pass.length < 8) {
+    err.textContent = 'La password deve essere di almeno 8 caratteri.';
+    err.style.display = 'block';
+    return;
+  }
+  try {
+    await API.signUp(email, pass, name, addr, '', desc);
+    document.getElementById('form-venue').className = 'reg-form';
+    document.getElementById('opt-venue').className = 'login-opt';
+    document.getElementById('opt-user').className = 'login-opt';
+    document.getElementById('success-msg').style.display = 'block';
+  } catch(e) {
+    err.textContent = e.message;
+    err.style.display = 'block';
+  }
+}
+
+async function registerUser() {
+  var email = document.getElementById('r-user-email').value.trim();
+  var pass = document.getElementById('r-user-pass').value;
+  var err = document.getElementById('r-user-error');
+  err.style.display = 'none';
+  if (!email || !pass) {
+    err.textContent = 'Compila tutti i campi.';
+    err.style.display = 'block';
+    return;
+  }
+  if (pass.length < 8) {
+    err.textContent = 'La password deve essere di almeno 8 caratteri.';
+    err.style.display = 'block';
+    return;
+  }
+  try {
+    await API.signUp(email, pass, '', '', '', '');
+    document.getElementById('form-user').className = 'reg-form';
+    document.getElementById('opt-venue').className = 'login-opt';
+    document.getElementById('opt-user').className = 'login-opt';
+    document.getElementById('success-msg').style.display = 'block';
+  } catch(e) {
+    err.textContent = e.message;
+    err.style.display = 'block';
+  }
+}
+</script>
 </body>
 </html>
