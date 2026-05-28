@@ -20,7 +20,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+model: 'claude-sonnet-4-5',
         max_tokens: 500,
         system: `You are a helpful assistant that extracts event information from unstructured text. Today is ${today}.
 
