@@ -17,24 +17,13 @@ export default async function handler(req, res) {
     });
   }
 
-  const offTopic = ['ciao', 'hello', 'hi', 'hey', 'test', 'prova', 'ok', 'grazie', 'thanks'];
-  if (offTopic.includes(query.trim().toLowerCase())) {
-    return res.status(200).json({
-      text: "Ciao! Prova a chiedermi qualcosa tipo 'musica live stasera gratis' 🎉",
-      ids: [],
-      followup: null
-    });
-  }
-
   const limitedEvents = events.slice(0, 30);
 
   const eventsContext = limitedEvents.map((e, i) =>
-    `${i + 1}. ${e.title} | ${e.venues?.venue_name || ''} | ${e.venues?.address || ''} | ${e.date} ${e.time || ''} | ${e.entry || 'free'} | ${(e.description || '').slice(0, 100)}`
+    `${i + 1}. ${e.title} | ${e.venues?.venue_name || ''} | ${e.venues?.address || ''} | ${e.date} ${e.time || ''} | ${e.entry || 'free'} | ${(e.description || '').slice(0, 80)}`
   ).join('\n');
 
-  const locationContext = location
-    ? `Utente si trova a: ${location.city || 'Milano'}.`
-    : '';
+  const locationContext = location ? `Utente si trova a: ${location.city || 'Milano'}.` : '';
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -47,15 +36,19 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 500,
-        system: `Sei EventAI, assistente per trovare eventi. ${locationContext}
+        system: `Sei EventAI, assistente per trovare eventi a Milano. ${locationContext}
 
 Eventi disponibili:
 ${eventsContext}
 
-Rispondi SOLO con questo JSON, nient'altro:
-{"text":"<intro breve amichevole>","ids":[<numeri eventi pertinenti>],"followup":"<suggerimento>"}
+IMPORTANTE: rispondi ESCLUSIVAMENTE con un oggetto JSON valido, senza testo prima o dopo, senza backtick, senza markdown. Solo JSON puro:
+{"text":"stringa","ids":[numeri],"followup":"stringa"}
 
-Se nessun evento corrisponde usa ids:[]. Rispondi nella lingua dell'utente.`,
+Regole:
+- text: frase breve introduttiva nella lingua dell'utente
+- ids: numeri degli eventi pertinenti (max 6)
+- followup: breve suggerimento per affinare la ricerca
+- Se nessun evento corrisponde: ids:[]`,
         messages: [{ role: 'user', content: query }]
       })
     });
@@ -67,13 +60,23 @@ Se nessun evento corrisponde usa ids:[]. Rispondi nella lingua dell'utente.`,
     }
 
     const data = await response.json();
-    const text = data.content.map(c => c.type === 'text' ? c.text : '').join('').trim();
-    const clean = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
+    const rawText = data.content.map(c => c.type === 'text' ? c.text : '').join('').trim();
+    
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error('No JSON found in response:', rawText);
+      return res.status(200).json({
+        text: "Ho trovato alcuni eventi che potrebbero interessarti!",
+        ids: [1, 2, 3],
+        followup: "Prova a essere più specifico sulla zona o il tipo di evento."
+      });
+    }
+    
+    const parsed = JSON.parse(jsonMatch[0]);
     return res.status(200).json(parsed);
 
   } catch (err) {
-    console.error('Handler error:', err);
+    console.error('Handler error:', err.message);
     return res.status(500).json({ error: err.message });
   }
 }
