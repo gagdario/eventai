@@ -332,9 +332,9 @@ function showTab(t){
   tab.className='tab active';
   tab.style.display='block';
   document.querySelectorAll('.nt').forEach(function(el){el.className='nt';});
-  var btns = document.querySelectorAll('.nt:not([style*="display:none"])');
+  var btns = document.querySelectorAll('.nt');
   btns.forEach(function(btn){
-    if(btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(t)){
+    if(btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'"+t+"'")){
       btn.className='nt active';
     }
   });
@@ -413,12 +413,8 @@ async function registerVenue(){
   if(pass.length<8){err.textContent='Password di almeno 8 caratteri.';err.style.display='block';return;}
   try {
     var data=await API.signUp(email,pass,name,addr,'',desc);
-    if(data.session){
-      onLoggedIn(data.session);
-    } else {
-      alert('Account creato! Accedi ora.');
-      showLogin();
-    }
+    if(data.session){ onLoggedIn(data.session); }
+    else { alert('Account creato! Accedi ora.'); showLogin(); }
   } catch(e){err.textContent=e.message;err.style.display='block';}
 }
 
@@ -431,12 +427,8 @@ async function registerUser(){
   if(pass.length<8){err.textContent='Password di almeno 8 caratteri.';err.style.display='block';return;}
   try {
     var data=await API.signUp(email,pass,'','','','');
-    if(data.session){
-      onLoggedIn(data.session);
-    } else {
-      alert('Account creato! Accedi ora.');
-      showLogin();
-    }
+    if(data.session){ onLoggedIn(data.session); }
+    else { alert('Account creato! Accedi ora.'); showLogin(); }
   } catch(e){err.textContent=e.message;err.style.display='block';}
 }
 
@@ -617,16 +609,12 @@ async function sendMessage(){
   addMsg(q,'user'); addTyping(); isSearching=true;
   try {
     if(allEvents.length===0) allEvents=await API.getEvents();
-    console.log('Events loaded:', allEvents.length);
-    console.log('Calling /api/chat with query:', q);
     var res=await API.searchWithAI(q,allEvents);
-    console.log('AI response:', JSON.stringify(res));
     removeTyping();
     var cards=(res.ids||[]).map(function(i){return buildCard(allEvents[i-1]);}).filter(Boolean).join('');
     var html='<div>'+res.text+'</div>'+(cards?'<div class="ev-results">'+cards+'</div>':'')+(res.followup?'<div class="followup"><i class="ti ti-bulb"></i> '+res.followup+'</div>':'');
     addMsg(html,'ai');
   } catch(e){
-    console.error('Error:', e.message, e);
     removeTyping();
     addMsg('Spiacente, qualcosa è andato storto. Riprova.','ai');
   }
@@ -639,49 +627,53 @@ function buildCard(e){
   var d=e.date?new Date(e.date).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}):'';
   if(e.time) d+=' · '+e.time.slice(0,5);
   if(e.date_to) d+=' → '+new Date(e.date_to).toLocaleDateString('it-IT',{day:'numeric',month:'short'});
-
   var cats={
-    music:{bg:'#eef2ff',c:'#4338ca',i:'ti-music',bdg:'bdg-music',label:'Musica'},
-    food:{bg:'#fff7ed',c:'#c2410c',i:'ti-tools-kitchen-2',bdg:'bdg-food',label:'Food'},
-    art:{bg:'#fefce8',c:'#a16207',i:'ti-palette',bdg:'bdg-art',label:'Arte'},
-    sport:{bg:'#f0fdf4',c:'#15803d',i:'ti-ball-football',bdg:'bdg-sport',label:'Sport'},
-    other:{bg:'#f8fafc',c:'#64748b',i:'ti-calendar',bdg:'bdg-other',label:'Altro'}
+    music:{bg:'#eef2ff',c:'#4338ca',i:'ti-music',label:'Musica'},
+    food:{bg:'#fff7ed',c:'#c2410c',i:'ti-tools-kitchen-2',label:'Food'},
+    art:{bg:'#fefce8',c:'#a16207',i:'ti-palette',label:'Arte'},
+    sport:{bg:'#f0fdf4',c:'#15803d',i:'ti-ball-football',label:'Sport'},
+    other:{bg:'#f8fafc',c:'#64748b',i:'ti-calendar',label:'Altro'}
   };
   var s=cats[e.category]||cats.other;
   var venueName=e.venues?e.venues.venue_name:'';
   var venueAddr=e.venues?e.venues.address:'';
   var desc=e.description||'';
-  var cardId='card-'+Math.random().toString(36).substr(2,9);
+  var uid='c'+Date.now()+Math.floor(Math.random()*9999);
 
-  return '<div class="ev-card" id="'+cardId+'" onclick="toggleCard(\''+cardId+'\')">'+
-    '<div class="ev-card-header">'+
-      '<div class="ev-card-icon" style="background:'+s.bg+'"><i class="ti '+s.i+'" style="color:'+s.c+'"></i></div>'+
-      '<div class="ev-card-main">'+
-        '<div class="ev-card-title">'+e.title+'</div>'+
-        '<div class="ev-card-meta">'+
-          (d?'<span><i class="ti ti-clock"></i>'+d+'</span>':'')+
-          (venueName?'<span><i class="ti ti-building-store"></i>'+venueName+'</span>':'')+
-          '<span class="bdg '+(isFree?'bdg-free':'bdg-paid')+'">'+(isFree?'✓ Gratuito':'A pagamento')+'</span>'+
+  return '<div class="ev-card" id="'+uid+'" onclick="toggleCard(\''+uid+'\')" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px;cursor:pointer;transition:box-shadow .2s">'+
+    '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px">'+
+      '<div style="width:40px;height:40px;border-radius:10px;background:'+s.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+
+        '<i class="ti '+s.i+'" style="color:'+s.c+';font-size:20px"></i>'+
+      '</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+e.title+'</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--text-muted);align-items:center">'+
+          (d?'<span><i class="ti ti-clock" style="font-size:12px;margin-right:2px"></i>'+d+'</span>':'')+
+          (venueName?'<span><i class="ti ti-building-store" style="font-size:12px;margin-right:2px"></i>'+venueName+'</span>':'')+
+          '<span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;background:'+(isFree?'#ecfdf5':'#fff7ed')+';color:'+(isFree?'#065f46':'#9a3412')+'">'+(isFree?'✓ Gratuito':'A pagamento')+'</span>'+
         '</div>'+
       '</div>'+
-      '<i class="ti ti-chevron-down ev-card-chevron"></i>'+
+      '<i class="ti ti-chevron-down" id="chev-'+uid+'" style="color:var(--text-light);font-size:18px;transition:transform .25s;flex-shrink:0"></i>'+
     '</div>'+
-    (desc||venueAddr?
-      '<div class="ev-card-body">'+
-        (desc?'<div class="ev-card-desc">'+desc+'</div>':'')+
-        '<div class="ev-card-footer">'+
-          (venueAddr?'<div class="ev-card-address"><i class="ti ti-map-pin"></i>'+venueAddr+'</div>':'')+
-          '<span class="bdg '+s.bdg+'"><i class="ti '+s.i+'"></i>'+s.label+'</span>'+
-        '</div>'+
-      '</div>'
-    :'')+
+    '<div id="body-'+uid+'" style="display:none;padding:0 14px 14px;border-top:1px solid var(--border)">'+
+      (desc?'<p style="font-size:13px;color:var(--text-muted);line-height:1.65;margin-top:10px;margin-bottom:8px">'+desc+'</p>':'')+
+      '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:6px">'+
+        (venueAddr?'<span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:4px"><i class="ti ti-map-pin" style="font-size:13px"></i>'+venueAddr+'</span>':'<span></span>')+
+        '<span style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;background:'+s.bg+';color:'+s.c+'">'+s.label+'</span>'+
+      '</div>'+
+    '</div>'+
   '</div>';
 }
 
-function toggleCard(id){
-  var card=document.getElementById(id);
-  if(card) card.className=card.className.includes('open')?'ev-card':'ev-card open';
+function toggleCard(uid){
+  var body=document.getElementById('body-'+uid);
+  var chev=document.getElementById('chev-'+uid);
+  if(!body) return;
+  var isOpen=body.style.display==='block';
+  body.style.display=isOpen?'none':'block';
+  if(chev) chev.style.transform=isOpen?'rotate(0deg)':'rotate(180deg)';
 }
+
 function addMsg(html,type){
   var box=document.getElementById('chat-box');
   var d=document.createElement('div');
