@@ -31,7 +31,7 @@
         <i class="ti ti-search"></i>
         <span>Find events</span>
       </button>
-      <button class="nt" onclick="showTab('venues')">
+      <button class="nt" id="tab-venues-btn" style="display:none" onclick="showTab('venues')">
         <i class="ti ti-building-store"></i>
         <span>For venues</span>
       </button>
@@ -85,30 +85,9 @@
     </div>
   </div>
 
-  <div id="tab-venues" class="tab">
+  <div id="tab-venues" class="tab" style="display:none">
     <div class="page-wrap">
-      <div id="venues-wall">
-        <div class="auth-card">
-          <div class="auth-icon"><i class="ti ti-building-store"></i></div>
-          <h2>Area venue</h2>
-          <p class="auth-sub">Accedi per gestire i tuoi eventi</p>
-          <div class="fg">
-            <label>Email</label>
-            <input type="email" id="v-email" placeholder="tuo@locale.it" />
-          </div>
-          <div class="fg">
-            <label>Password</label>
-            <input type="password" id="v-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')venueLogin()" />
-          </div>
-          <div class="alert-error" id="v-error"></div>
-          <button class="btn-primary" onclick="venueLogin()">
-            <i class="ti ti-login"></i> Accedi
-          </button>
-          <p class="auth-link">Non hai un account? <a onclick="showTab('login')">Registrati</a></p>
-        </div>
-      </div>
-
-      <div id="venues-dash" style="display:none">
+      <div id="venues-dash">
         <div class="dash-header">
           <div>
             <div class="dash-name" id="dash-name">Il mio locale</div>
@@ -164,37 +143,35 @@
         <div class="ev-table" id="ev-table">
           <div class="empty-state">Caricamento eventi...</div>
         </div>
-      </div>
 
-      <div id="edit-account-form" style="display:none">
-        <div class="dash-header">
-          <div>
+        <div id="edit-account-wrap" style="display:none">
+          <div class="dash-header" style="margin-top:2rem">
             <div class="dash-name">Modifica account</div>
-          </div>
-          <button class="btn-ghost btn-sm" onclick="hideEditAccount()">
-            <i class="ti ti-arrow-left"></i> Indietro
-          </button>
-        </div>
-        <div class="add-form open">
-          <div class="fg">
-            <label>Nome locale <span class="req">*</span></label>
-            <input type="text" id="edit-venue-name" placeholder="es. Frida Kahlo Café" />
-          </div>
-          <div class="fg">
-            <label>Indirizzo</label>
-            <input type="text" id="edit-venue-address" placeholder="es. Via Corsico 1, Milano" />
-          </div>
-          <div class="fg">
-            <label>Descrizione</label>
-            <textarea id="edit-venue-desc" placeholder="Descrivi il tuo locale..."></textarea>
-          </div>
-          <div class="alert-error" id="edit-error"></div>
-          <div class="alert-success" id="edit-success"></div>
-          <div class="form-actions">
-            <button class="btn-primary" onclick="saveAccount()">
-              <i class="ti ti-check"></i> Salva modifiche
+            <button class="btn-ghost btn-sm" onclick="hideEditAccount()">
+              <i class="ti ti-arrow-left"></i> Indietro
             </button>
-            <button class="btn-ghost" onclick="hideEditAccount()">Annulla</button>
+          </div>
+          <div class="add-form open">
+            <div class="fg">
+              <label>Nome locale <span class="req">*</span></label>
+              <input type="text" id="edit-venue-name" />
+            </div>
+            <div class="fg">
+              <label>Indirizzo</label>
+              <input type="text" id="edit-venue-address" />
+            </div>
+            <div class="fg">
+              <label>Descrizione</label>
+              <textarea id="edit-venue-desc"></textarea>
+            </div>
+            <div class="alert-error" id="edit-error"></div>
+            <div class="alert-success" id="edit-success"></div>
+            <div class="form-actions">
+              <button class="btn-primary" onclick="saveAccount()">
+                <i class="ti ti-check"></i> Salva modifiche
+              </button>
+              <button class="btn-ghost" onclick="hideEditAccount()">Annulla</button>
+            </div>
           </div>
         </div>
       </div>
@@ -204,23 +181,45 @@
   <div id="tab-login" class="tab">
     <div class="page-wrap">
       <div class="login-wrap">
-        <h2 class="login-title">Benvenuto su EventAI</h2>
-        <p class="login-sub">Scegli come vuoi accedere</p>
-        <div class="login-opts">
-          <div class="login-opt" id="opt-venue" onclick="selectOpt('venue')">
-            <i class="ti ti-building-store"></i>
-            <div class="opt-title">Sono un locale</div>
-            <div class="opt-desc">Voglio pubblicare i miei eventi</div>
+
+        <div id="form-login" class="reg-form on">
+          <h2 class="login-title">Bentornato</h2>
+          <p class="login-sub">Accedi al tuo account</p>
+          <div class="fg">
+            <label>Email</label>
+            <input type="email" id="l-email" placeholder="tua@email.it" />
           </div>
-          <div class="login-opt" id="opt-user" onclick="selectOpt('user')">
-            <i class="ti ti-search"></i>
-            <div class="opt-title">Sono un utente</div>
-            <div class="opt-desc">Voglio cercare eventi</div>
+          <div class="fg">
+            <label>Password</label>
+            <input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginUser()" />
           </div>
+          <div class="alert-error" id="l-error"></div>
+          <button class="btn-primary" onclick="loginUser()">
+            <i class="ti ti-login"></i> Accedi
+          </button>
+          <p class="auth-link">Non hai un account? <a onclick="showRegister()">Registrati</a></p>
+        </div>
+
+        <div id="form-register-choice" class="reg-form">
+          <h2 class="login-title">Crea account</h2>
+          <p class="login-sub">Che tipo di account vuoi creare?</p>
+          <div class="login-opts">
+            <div class="login-opt" id="opt-venue" onclick="selectOpt('venue')">
+              <i class="ti ti-building-store"></i>
+              <div class="opt-title">Sono un locale</div>
+              <div class="opt-desc">Voglio pubblicare i miei eventi</div>
+            </div>
+            <div class="login-opt" id="opt-user" onclick="selectOpt('user')">
+              <i class="ti ti-search"></i>
+              <div class="opt-title">Sono un utente</div>
+              <div class="opt-desc">Voglio cercare eventi</div>
+            </div>
+          </div>
+          <p class="auth-link">Hai già un account? <a onclick="showLogin()">Accedi</a></p>
         </div>
 
         <div id="form-venue" class="reg-form">
-          <div class="form-title">Registra il tuo locale</div>
+          <h2 class="login-title">Registra il locale</h2>
           <div class="fg">
             <label>Nome locale <span class="req">*</span></label>
             <input type="text" id="r-venue-name" placeholder="es. Frida Kahlo Café" />
@@ -245,11 +244,11 @@
           <button class="btn-primary" onclick="registerVenue()">
             <i class="ti ti-building-store"></i> Crea account locale
           </button>
-          <p class="auth-link">Hai già un account? <a onclick="showLoginForm()">Accedi</a></p>
+          <p class="auth-link">Hai già un account? <a onclick="showLogin()">Accedi</a></p>
         </div>
 
         <div id="form-user" class="reg-form">
-          <div class="form-title">Crea il tuo account</div>
+          <h2 class="login-title">Crea account</h2>
           <div class="fg">
             <label>Email <span class="req">*</span></label>
             <input type="email" id="r-user-email" placeholder="tua@email.it" />
@@ -262,25 +261,9 @@
           <button class="btn-primary" onclick="registerUser()">
             <i class="ti ti-user"></i> Crea account
           </button>
-          <p class="auth-link">Hai già un account? <a onclick="showLoginForm()">Accedi</a></p>
+          <p class="auth-link">Hai già un account? <a onclick="showLogin()">Accedi</a></p>
         </div>
 
-        <div id="form-login" class="reg-form">
-          <div class="form-title">Accedi</div>
-          <div class="fg">
-            <label>Email</label>
-            <input type="email" id="l-email" placeholder="tua@email.it" />
-          </div>
-          <div class="fg">
-            <label>Password</label>
-            <input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginUser()" />
-          </div>
-          <div class="alert-error" id="l-error"></div>
-          <button class="btn-primary" onclick="loginUser()">
-            <i class="ti ti-login"></i> Accedi
-          </button>
-          <p class="auth-link">Non hai un account? <a onclick="selectOpt('venue')">Registrati</a></p>
-        </div>
       </div>
     </div>
   </div>
@@ -325,24 +308,35 @@ async function initApp(){
 function onLoggedIn(session){
   currentSession = session;
   var meta = session.user.user_metadata;
+  var isVenue = !!meta.venue_name;
   var name = meta.venue_name || session.user.email.split('@')[0];
   document.getElementById('login-label').textContent = name;
   document.getElementById('login-icon').className = 'ti ti-settings';
-  if(meta.venue_name){
-    document.getElementById('venues-wall').style.display = 'none';
-    document.getElementById('venues-dash').style.display = 'block';
+  if(isVenue){
+    document.getElementById('tab-venues-btn').style.display = 'flex';
     document.getElementById('dash-name').textContent = meta.venue_name;
     document.getElementById('dash-loc').textContent = meta.address || '';
     loadVenueEvents();
+    showTab('venues');
+  } else {
+    showTab('find');
   }
 }
 
 function showTab(t){
-  document.querySelectorAll('.tab').forEach(function(el){el.className='tab';});
-  document.getElementById('tab-'+t).className='tab active';
+  document.querySelectorAll('.tab').forEach(function(el){
+    el.className='tab';
+    el.style.display='none';
+  });
+  var tab = document.getElementById('tab-'+t);
+  tab.className='tab active';
+  tab.style.display='block';
   document.querySelectorAll('.nt').forEach(function(el){el.className='nt';});
-  ['find','venues','login'].forEach(function(id,i){
-    if(id===t) document.querySelectorAll('.nt')[i].className='nt active';
+  var btns = document.querySelectorAll('.nt:not([style*="display:none"])');
+  btns.forEach(function(btn){
+    if(btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(t)){
+      btn.className='nt active';
+    }
   });
   document.getElementById('dropdown').className='dropdown';
 }
@@ -351,7 +345,9 @@ function handleLoginBtn(){
   if(currentSession){
     var dd=document.getElementById('dropdown');
     dd.className=dd.className.includes('open')?'dropdown':'dropdown open';
-  } else { showTab('login'); }
+  } else {
+    showTab('login');
+  }
 }
 
 document.addEventListener('click',function(e){
@@ -366,66 +362,43 @@ async function handleLogout(){
   document.getElementById('login-label').textContent='Login';
   document.getElementById('login-icon').className='ti ti-user';
   document.getElementById('dropdown').className='dropdown';
-  document.getElementById('venues-wall').style.display='flex';
-  document.getElementById('venues-dash').style.display='none';
-  document.getElementById('edit-account-form').style.display='none';
+  document.getElementById('tab-venues-btn').style.display='none';
+  showTab('find');
+  showLogin();
 }
 
-function showEditAccount(){
-  document.getElementById('dropdown').className='dropdown';
-  showTab('venues');
-  var meta = currentSession.user.user_metadata;
-  document.getElementById('edit-venue-name').value = meta.venue_name || '';
-  document.getElementById('edit-venue-address').value = meta.address || '';
-  document.getElementById('edit-venue-desc').value = meta.description || '';
-  document.getElementById('venues-dash').style.display='none';
-  document.getElementById('venues-wall').style.display='none';
-  document.getElementById('edit-account-form').style.display='block';
+function showRegister(){
+  document.getElementById('form-login').className='reg-form';
+  document.getElementById('form-register-choice').className='reg-form on';
+  document.getElementById('form-venue').className='reg-form';
+  document.getElementById('form-user').className='reg-form';
 }
 
-function hideEditAccount(){
-  document.getElementById('edit-account-form').style.display='none';
-  document.getElementById('venues-dash').style.display='block';
-}
-
-async function saveAccount(){
-  var name = document.getElementById('edit-venue-name').value.trim();
-  var address = document.getElementById('edit-venue-address').value.trim();
-  var desc = document.getElementById('edit-venue-desc').value.trim();
-  var err = document.getElementById('edit-error');
-  var suc = document.getElementById('edit-success');
-  err.style.display='none'; suc.style.display='none';
-  if(!name){ err.textContent='Il nome è obbligatorio.'; err.style.display='block'; return; }
-  try {
-    await API.updateUserMeta({ venue_name: name, address: address, description: desc });
-    var s = await API.getSession();
-    currentSession = s;
-    document.getElementById('login-label').textContent = name;
-    document.getElementById('dash-name').textContent = name;
-    document.getElementById('dash-loc').textContent = address;
-    suc.textContent = 'Modifiche salvate!';
-    suc.style.display = 'block';
-    setTimeout(function(){ hideEditAccount(); }, 1500);
-  } catch(e){
-    err.textContent = 'Errore: ' + e.message;
-    err.style.display = 'block';
-  }
+function showLogin(){
+  document.getElementById('form-login').className='reg-form on';
+  document.getElementById('form-register-choice').className='reg-form';
+  document.getElementById('form-venue').className='reg-form';
+  document.getElementById('form-user').className='reg-form';
 }
 
 function selectOpt(type){
   document.getElementById('opt-venue').className='login-opt'+(type==='venue'?' active':'');
   document.getElementById('opt-user').className='login-opt'+(type==='user'?' active':'');
+  document.getElementById('form-register-choice').className='reg-form';
   document.getElementById('form-venue').className='reg-form'+(type==='venue'?' on':'');
   document.getElementById('form-user').className='reg-form'+(type==='user'?' on':'');
-  document.getElementById('form-login').className='reg-form';
 }
 
-function showLoginForm(){
-  document.getElementById('form-venue').className='reg-form';
-  document.getElementById('form-user').className='reg-form';
-  document.getElementById('form-login').className='reg-form on';
-  document.getElementById('opt-venue').className='login-opt';
-  document.getElementById('opt-user').className='login-opt';
+async function loginUser(){
+  var email=document.getElementById('l-email').value.trim();
+  var pass=document.getElementById('l-pass').value;
+  var err=document.getElementById('l-error');
+  err.style.display='none';
+  if(!email||!pass){err.textContent='Compila tutti i campi.';err.style.display='block';return;}
+  try {
+    var data=await API.signIn(email,pass);
+    onLoggedIn(data.session);
+  } catch(e){err.textContent='Email o password errati.';err.style.display='block';}
 }
 
 async function registerVenue(){
@@ -439,9 +412,13 @@ async function registerVenue(){
   if(!name||!addr||!email||!pass){err.textContent='Compila tutti i campi obbligatori.';err.style.display='block';return;}
   if(pass.length<8){err.textContent='Password di almeno 8 caratteri.';err.style.display='block';return;}
   try {
-    await API.signUp(email,pass,name,addr,'',desc);
-    alert('Account creato! Accedi ora.');
-    showLoginForm();
+    var data=await API.signUp(email,pass,name,addr,'',desc);
+    if(data.session){
+      onLoggedIn(data.session);
+    } else {
+      alert('Account creato! Accedi ora.');
+      showLogin();
+    }
   } catch(e){err.textContent=e.message;err.style.display='block';}
 }
 
@@ -453,44 +430,62 @@ async function registerUser(){
   if(!email||!pass){err.textContent='Compila tutti i campi.';err.style.display='block';return;}
   if(pass.length<8){err.textContent='Password di almeno 8 caratteri.';err.style.display='block';return;}
   try {
-    await API.signUp(email,pass,'','','','');
-    alert('Account creato! Accedi ora.');
-    showLoginForm();
+    var data=await API.signUp(email,pass,'','','','');
+    if(data.session){
+      onLoggedIn(data.session);
+    } else {
+      alert('Account creato! Accedi ora.');
+      showLogin();
+    }
   } catch(e){err.textContent=e.message;err.style.display='block';}
 }
 
-async function loginUser(){
-  var email=document.getElementById('l-email').value.trim();
-  var pass=document.getElementById('l-pass').value;
-  var err=document.getElementById('l-error');
-  err.style.display='none';
-  if(!email||!pass){err.textContent='Compila tutti i campi.';err.style.display='block';return;}
-  try {
-    var data=await API.signIn(email,pass);
-    onLoggedIn(data.session);
-    showTab('find');
-  } catch(e){err.textContent='Email o password errati.';err.style.display='block';}
+function showEditAccount(){
+  document.getElementById('dropdown').className='dropdown';
+  var meta=currentSession.user.user_metadata;
+  document.getElementById('edit-venue-name').value=meta.venue_name||'';
+  document.getElementById('edit-venue-address').value=meta.address||'';
+  document.getElementById('edit-venue-desc').value=meta.description||'';
+  document.getElementById('venues-dash').style.opacity='0.3';
+  document.getElementById('edit-account-wrap').style.display='block';
+  document.getElementById('edit-account-wrap').scrollIntoView({behavior:'smooth'});
 }
 
-async function venueLogin(){
-  var email=document.getElementById('v-email').value.trim();
-  var pass=document.getElementById('v-password').value;
-  var err=document.getElementById('v-error');
-  err.style.display='none';
-  if(!email||!pass){err.textContent='Compila tutti i campi.';err.style.display='block';return;}
+function hideEditAccount(){
+  document.getElementById('edit-account-wrap').style.display='none';
+  document.getElementById('venues-dash').style.opacity='1';
+}
+
+async function saveAccount(){
+  var name=document.getElementById('edit-venue-name').value.trim();
+  var address=document.getElementById('edit-venue-address').value.trim();
+  var desc=document.getElementById('edit-venue-desc').value.trim();
+  var err=document.getElementById('edit-error');
+  var suc=document.getElementById('edit-success');
+  err.style.display='none'; suc.style.display='none';
+  if(!name){err.textContent='Il nome è obbligatorio.';err.style.display='block';return;}
   try {
-    var data=await API.signIn(email,pass);
-    onLoggedIn(data.session);
-  } catch(e){err.textContent='Email o password errati.';err.style.display='block';}
+    await API.updateUserMeta({venue_name:name,address:address,description:desc});
+    var s=await API.getSession();
+    currentSession=s;
+    document.getElementById('login-label').textContent=name;
+    document.getElementById('dash-name').textContent=name;
+    document.getElementById('dash-loc').textContent=address;
+    suc.textContent='Modifiche salvate!';
+    suc.style.display='block';
+    setTimeout(hideEditAccount,1500);
+  } catch(e){err.textContent='Errore: '+e.message;err.style.display='block';}
 }
 
 function toggleAddForm(){
   var f=document.getElementById('add-form');
-  f.className=f.className.includes('open')?'add-form':'add-form open';
-  if(f.className.includes('open')){
+  var isOpen=f.className.includes('open');
+  if(isOpen){ cancelForm(); }
+  else {
     editingEventId=null;
     document.getElementById('form-title').textContent='Nuovo evento';
     resetForm();
+    f.className='add-form open';
     f.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
 }
@@ -542,7 +537,7 @@ function renderVenueEvents(){
       '<div class="ev-info">'+
         '<div class="ev-title">'+ev.title+'</div>'+
         '<div class="ev-sub">'+d+(loc?' · <i class="ti ti-map-pin"></i> '+loc:'')+'</div>'+
-        (desc?'<div class="ev-desc-preview">'+desc.substring(0,100)+(desc.length>100?'...':'')+'</div>':'')+
+        (desc?'<div class="ev-desc-preview">'+desc.substring(0,120)+(desc.length>120?'...':'')+'</div>':'')+
       '</div>'+
       '<div class="ev-acts">'+
         '<button class="ic-btn" onclick="editEvent(\''+ev.id+'\')" aria-label="Modifica"><i class="ti ti-edit"></i></button>'+
@@ -604,7 +599,7 @@ async function saveEvent(){
     }
     suc.style.display='block';
     await loadVenueEvents();
-    setTimeout(function(){cancelForm();},1500);
+    setTimeout(cancelForm,1500);
   } catch(e){err.textContent='Errore: '+e.message;err.style.display='block';}
   btn.disabled=false; btn.innerHTML='<i class="ti ti-sparkles"></i> Pubblica con AI';
 }
@@ -636,10 +631,12 @@ function buildCard(e){
   var isFree=(e.entry||'').toLowerCase()==='free'||(e.entry||'').toLowerCase()==='gratuito';
   var d=e.date?new Date(e.date).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}):'';
   if(e.time) d+=' · '+e.time.slice(0,5);
+  var desc=e.description?'<div class="ev-desc-preview">'+e.description.substring(0,100)+(e.description.length>100?'...':'')+'</div>':'';
   return '<div class="ev-card">'+
     '<div class="ev-info">'+
       '<div class="ev-title">'+e.title+'</div>'+
       '<div class="ev-sub">'+(e.venues?'<i class="ti ti-map-pin"></i> '+e.venues.venue_name+(e.venues.address?' · '+e.venues.address:''):'')+' '+d+'</div>'+
+      desc+
       '<div class="ev-badges"><span class="bdg '+(isFree?'bdg-free':'bdg-paid')+'">'+(isFree?'gratuito':'a pagamento')+'</span></div>'+
     '</div>'+
   '</div>';
@@ -647,7 +644,8 @@ function buildCard(e){
 
 function addMsg(html,type){
   var box=document.getElementById('chat-box');
-  var d=document.createElement('div'); d.className='msg '+(type==='user'?'user':'ai');
+  var d=document.createElement('div');
+  d.className='msg '+(type==='user'?'user':'ai');
   d.innerHTML='<div class="av '+(type==='user'?'user':'ai')+'">'+(type==='user'?'Tu':'E')+'</div><div class="bub">'+html+'</div>';
   box.appendChild(d); box.scrollTop=box.scrollHeight;
 }
