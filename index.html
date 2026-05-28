@@ -617,12 +617,19 @@ async function sendMessage(){
   addMsg(q,'user'); addTyping(); isSearching=true;
   try {
     if(allEvents.length===0) allEvents=await API.getEvents();
+    console.log('Events loaded:', allEvents.length);
+    console.log('Calling /api/chat with query:', q);
     var res=await API.searchWithAI(q,allEvents);
+    console.log('AI response:', JSON.stringify(res));
     removeTyping();
     var cards=(res.ids||[]).map(function(i){return buildCard(allEvents[i-1]);}).filter(Boolean).join('');
     var html='<div>'+res.text+'</div>'+(cards?'<div class="ev-results">'+cards+'</div>':'')+(res.followup?'<div class="followup"><i class="ti ti-bulb"></i> '+res.followup+'</div>':'');
     addMsg(html,'ai');
-  } catch(e){removeTyping();addMsg('Spiacente, qualcosa è andato storto. Riprova.','ai');}
+  } catch(e){
+    console.error('Error:', e.message, e);
+    removeTyping();
+    addMsg('Spiacente, qualcosa è andato storto. Riprova.','ai');
+  }
   isSearching=false;
 }
 
