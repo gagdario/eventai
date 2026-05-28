@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,186 +12,263 @@
 </head>
 <body>
 
-<div id="gate" style="position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:9999">
-  <div style="background:#f8f8f8;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;padding:2rem;width:320px;display:flex;flex-direction:column;gap:14px">
-    <div style="display:flex;align-items:center;gap:8px">
-      <div style="width:32px;height:32px;border-radius:8px;background:#E24B4A;display:flex;align-items:center;justify-content:center">
-        <i class="ti ti-map-pin" style="color:#fff;font-size:17px"></i>
-      </div>
-      <span style="font-size:20px;font-weight:500">event<strong style="color:#E24B4A">ai</strong></span>
-    </div>
-    <p style="font-size:13px;color:#666">This site is currently in private beta.</p>
-    <input type="password" id="gate-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkPassword()" style="border:0.5px solid rgba(0,0,0,0.15);border-radius:8px;padding:10px 12px;font-size:14px;outline:none;font-family:inherit" />
-    <button onclick="checkPassword()" style="background:#E24B4A;color:#fff;border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">Enter</button>
-    <p id="gate-error" style="font-size:13px;color:#A32D2D;display:none;text-align:center">Wrong password. Try again.</p>
+<div id="gate">
+  <div class="gate-card">
+    <div class="logo">event<span>ai</span></div>
+    <p class="gate-sub">Accesso privato — beta</p>
+    <input type="password" id="gate-input" placeholder="Password" onkeydown="if(event.key==='Enter')checkPassword()" />
+    <button class="btn-primary" onclick="checkPassword()">Entra</button>
+    <p id="gate-error">Password errata. Riprova.</p>
   </div>
 </div>
 
-<div id="app">
+<div id="app" style="display:none">
+
   <nav class="navbar">
-    <div class="logo">
-      <i class="ti ti-map-pin"></i>
-      <span>event<strong>ai</strong></span>
-    </div>
+    <div class="logo">event<span>ai</span></div>
     <div class="nav-tabs">
-      <button class="nav-tab active" onclick="showTab('find')"><i class="ti ti-search"></i> Find events</button>
-      <button class="nav-tab" onclick="showTab('venues')"><i class="ti ti-building-store"></i> For venues</button>
-      <button class="nav-tab" onclick="showTab('login')" id="login-tab-btn"><i class="ti ti-user"></i> <span id="login-tab-label">Login</span></button>
+      <button class="nt active" onclick="showTab('find')">
+        <i class="ti ti-search"></i>
+        <span>Find events</span>
+      </button>
+      <button class="nt" onclick="showTab('venues')">
+        <i class="ti ti-building-store"></i>
+        <span>For venues</span>
+      </button>
+      <button class="nt" onclick="handleLoginBtn()" id="login-btn">
+        <i class="ti ti-user" id="login-icon"></i>
+        <span id="login-label">Login</span>
+      </button>
+    </div>
+    <div class="dropdown" id="dropdown">
+      <div class="dd-item" onclick="showSaved()">
+        <i class="ti ti-bookmark"></i> Eventi salvati
+        <span class="saved-badge" id="saved-count" style="display:none">0</span>
+      </div>
+      <div class="dd-item dd-red" onclick="handleLogout()">
+        <i class="ti ti-logout"></i> Logout
+      </div>
     </div>
   </nav>
 
   <div id="tab-find" class="tab active">
-    <div class="find-wrap">
+    <div class="page-wrap">
       <div class="find-hero">
-        <h1>Find the perfect event<br/>with AI</h1>
-        <p>Ask anything in natural language</p>
+        <h1>Trova l'evento perfetto<br/>con l'AI</h1>
+        <p>Chiedi qualsiasi cosa in linguaggio naturale</p>
       </div>
       <div class="sugs">
-        <span class="sug" onclick="sendQ('live music tonight in Milan for free')">live music tonight free</span>
-        <span class="sug" onclick="sendQ('aperitivo with DJ set Navigli')">aperitivo DJ Navigli</span>
-        <span class="sug" onclick="sendQ('free events this weekend Milan')">free events weekend</span>
-        <span class="sug" onclick="sendQ('something fun with kids on Sunday')">kids Sunday</span>
+        <button class="sug" onclick="sendQ('Musica live gratis stasera a Milano')">
+          <i class="ti ti-music"></i> Musica live gratis stasera
+        </button>
+        <button class="sug" onclick="sendQ('Cosa fare domenica con i bambini a Milano?')">
+          <i class="ti ti-heart"></i> Domenica con i bambini
+        </button>
+        <button class="sug" onclick="sendQ('Aperitivo con DJ set zona Navigli')">
+          <i class="ti ti-glass"></i> Aperitivo DJ set Navigli
+        </button>
+        <button class="sug" onclick="sendQ('Eventi gratuiti questo weekend a Milano')">
+          <i class="ti ti-ticket"></i> Gratis questo weekend
+        </button>
       </div>
-      <div class="chat-container">
+      <div class="chat-wrap">
         <div class="chat-box" id="chat-box">
           <div class="msg ai">
-            <div class="avatar">E</div>
-            <div class="bubble">Hi! I'm EventAI. Tell me what you're looking for and I'll find the perfect events for you.</div>
+            <div class="av ai">E</div>
+            <div class="bub">Ciao! Sono EventAI. Dimmi cosa cerchi e trovo gli eventi perfetti per te.</div>
           </div>
         </div>
-        <div class="chat-footer">
-          <input type="text" id="chat-input" placeholder="e.g. free concerts tonight in Milan..." onkeydown="if(event.key==='Enter') sendMessage()" />
-          <button onclick="sendMessage()" aria-label="Send"><i class="ti ti-send"></i></button>
+        <div class="chat-ft">
+          <input type="text" id="chat-inp" placeholder="es. concerti gratis stasera a Milano..." onkeydown="if(event.key==='Enter')sendMessage()" />
+          <button onclick="sendMessage()" aria-label="Invia"><i class="ti ti-send"></i></button>
         </div>
       </div>
     </div>
   </div>
 
   <div id="tab-venues" class="tab">
-    <div id="venues-login-wall" class="auth-wall">
-      <div class="auth-card">
-        <div style="text-align:center;margin-bottom:0.5rem">
-          <i class="ti ti-building-store" style="font-size:28px;color:#E24B4A"></i>
-          <h2 style="font-size:18px;font-weight:500;margin-top:8px">Venue area</h2>
-          <p style="font-size:13px;color:var(--text-muted);margin-top:4px">Login to manage your events</p>
+    <div class="page-wrap">
+      <div id="venues-wall">
+        <div class="auth-card">
+          <div class="auth-icon"><i class="ti ti-building-store"></i></div>
+          <h2>Area venue</h2>
+          <p class="auth-sub">Accedi per gestire i tuoi eventi</p>
+          <div class="fg">
+            <label>Email</label>
+            <input type="email" id="v-email" placeholder="tuo@locale.it" />
+          </div>
+          <div class="fg">
+            <label>Password</label>
+            <input type="password" id="v-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')venueLogin()" />
+          </div>
+          <div class="alert-error" id="v-error"></div>
+          <button class="btn-primary" onclick="venueLogin()">
+            <i class="ti ti-login"></i> Accedi
+          </button>
+          <p class="auth-link">Non hai un account? <a onclick="showTab('login')">Registrati</a></p>
         </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="v-email" placeholder="your@email.com" />
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="v-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')venueLogin()" />
-        </div>
-        <div id="v-error" class="alert alert-error"></div>
-        <button class="btn btn-primary" onclick="venueLogin()" style="width:100%;justify-content:center">
-          <i class="ti ti-login"></i> Login
-        </button>
-        <p style="font-size:13px;color:var(--text-muted);text-align:center">
-          No account? <a href="register.html" style="color:#E24B4A;text-decoration:none">Register your venue</a>
-        </p>
       </div>
-    </div>
 
-    <div id="venues-dashboard" style="display:none">
-      <div class="dashboard">
+      <div id="venues-dash" style="display:none">
         <div class="dash-header">
           <div>
-            <h2 id="dash-venue-name">My venue</h2>
-            <p style="font-size:13px;color:var(--text-muted)" id="dash-venue-location"></p>
+            <div class="dash-name" id="dash-name">Il mio locale</div>
+            <div class="dash-loc" id="dash-loc"></div>
           </div>
-          <button class="btn btn-secondary" onclick="venueLogout()">
-            <i class="ti ti-logout"></i> Logout
+          <button class="btn-primary btn-sm" onclick="toggleAddForm()">
+            <i class="ti ti-plus"></i> Aggiungi evento
           </button>
         </div>
 
-        <div class="dash-section">
-          <h3 class="section-title">Add event</h3>
-          <div class="add-form">
-            <div class="form-group">
-              <label>Event name <span style="color:#E24B4A">*</span></label>
-              <input type="text" id="ev-name" placeholder="e.g. Jazz night, aperitivo, DJ set..." />
-            </div>
-            <div class="form-group">
-              <label>Date <span style="font-size:12px;color:var(--text-muted)">(optional)</span></label>
-              <div style="display:flex;align-items:center;gap:8px">
-                <input type="date" id="ev-date" style="flex:1" />
-                <input type="time" id="ev-time" style="flex:1" />
-              </div>
-              <label class="range-toggle">
-                <input type="checkbox" id="ev-range-toggle" onchange="toggleRange()" />
-                <span>Multi-day event</span>
-              </label>
-              <div id="ev-range-row" style="display:none;align-items:center;gap:8px;margin-top:4px">
-                <span style="font-size:13px;color:var(--text-muted);white-space:nowrap">End date</span>
-                <input type="date" id="ev-date-to" style="flex:1" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Description <span style="font-size:12px;color:var(--text-muted)">(paste anything — AI cleans it up)</span></label>
-              <textarea id="ev-description" placeholder="Paste a WhatsApp message, Instagram caption, or write freely. AI will extract and clean all details automatically."></textarea>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px">
-              <button class="btn btn-primary" onclick="addEvent()" id="add-btn">
-                <i class="ti ti-sparkles"></i> Publish with AI
-              </button>
-              <span id="ev-loading" style="display:none;font-size:13px;color:var(--text-muted)">
-                <i class="ti ti-loader"></i> AI is processing...
-              </span>
-            </div>
-            <div id="ev-error" class="alert alert-error"></div>
-            <div id="ev-success" class="alert alert-success"></div>
+        <div class="add-form" id="add-form">
+          <div class="form-title">Nuovo evento</div>
+          <div class="fg">
+            <label>Nome evento <span class="req">*</span></label>
+            <input type="text" id="ev-name" placeholder="es. Jazz night, aperitivo, DJ set..." />
           </div>
+          <div class="fg">
+            <label>Data <span class="req">*</span></label>
+            <input type="date" id="ev-date" />
+            <label class="toggle-label">
+              <input type="checkbox" id="ev-multiday" onchange="toggleMultiday()" />
+              <span>L'evento dura più giorni</span>
+            </label>
+            <div id="multiday-row" class="multiday-row">
+              <span class="multiday-label">Data fine</span>
+              <input type="date" id="ev-date-to" />
+            </div>
+          </div>
+          <div class="fg">
+            <label>Orario <span class="opt">facoltativo</span></label>
+            <input type="time" id="ev-time" />
+          </div>
+          <div class="fg">
+            <label>Luogo <span class="opt">facoltativo</span></label>
+            <input type="text" id="ev-location" placeholder="es. Via Corsico 1, Milano" />
+            <span class="field-note">Se lasciato vuoto verrà usata la sede del locale</span>
+          </div>
+          <div class="fg">
+            <label>Descrizione <span class="opt">facoltativa</span></label>
+            <textarea id="ev-desc" placeholder="Scrivi liberamente — più informazioni fornisci, più l'AI riuscirà a trovare il tuo evento e raggiungere il cliente giusto. Non preoccuparti del formato, ci pensa l'AI."></textarea>
+          </div>
+          <div class="form-actions">
+            <button class="btn-primary" onclick="addEvent()" id="add-btn">
+              <i class="ti ti-sparkles"></i> Pubblica con AI
+            </button>
+            <button class="btn-ghost" onclick="toggleAddForm()">Annulla</button>
+          </div>
+          <div class="alert-error" id="ev-error"></div>
+          <div class="alert-success" id="ev-success"></div>
         </div>
 
-        <div class="dash-section">
-          <h3 class="section-title">Your events</h3>
-          <div class="events-table" id="events-list">
-            <div style="padding:1rem;font-size:14px;color:var(--text-muted)">Loading your events...</div>
-          </div>
+        <div class="section-label">I tuoi eventi</div>
+        <div class="ev-table" id="ev-table">
+          <div class="empty-state">Caricamento eventi...</div>
         </div>
       </div>
     </div>
   </div>
 
   <div id="tab-login" class="tab">
-    <div class="auth-wall">
-      <div class="auth-card">
-        <div style="text-align:center;margin-bottom:0.5rem">
-          <i class="ti ti-user" style="font-size:28px;color:#E24B4A"></i>
-          <h2 style="font-size:18px;font-weight:500;margin-top:8px">Login</h2>
+    <div class="page-wrap">
+      <div class="login-wrap">
+        <h2 class="login-title">Benvenuto su EventAI</h2>
+        <p class="login-sub">Scegli come vuoi accedere</p>
+        <div class="login-opts">
+          <div class="login-opt" id="opt-venue" onclick="selectOpt('venue')">
+            <i class="ti ti-building-store"></i>
+            <div class="opt-title">Sono un locale</div>
+            <div class="opt-desc">Voglio pubblicare i miei eventi</div>
+          </div>
+          <div class="login-opt" id="opt-user" onclick="selectOpt('user')">
+            <i class="ti ti-search"></i>
+            <div class="opt-title">Sono un utente</div>
+            <div class="opt-desc">Voglio cercare eventi</div>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="l-email" placeholder="your@email.com" />
+
+        <div id="form-venue" class="reg-form">
+          <div class="form-title">Registra il tuo locale</div>
+          <div class="fg">
+            <label>Nome locale <span class="req">*</span></label>
+            <input type="text" id="r-venue-name" placeholder="es. Frida Kahlo Café" />
+          </div>
+          <div class="fg">
+            <label>Descrizione <span class="opt">facoltativa</span></label>
+            <textarea id="r-venue-desc" placeholder="Descriviti — queste info verranno usate dall'AI per rispondere meglio agli utenti"></textarea>
+          </div>
+          <div class="fg">
+            <label>Indirizzo <span class="req">*</span></label>
+            <input type="text" id="r-venue-addr" placeholder="es. Via Corsico 1, Milano" />
+          </div>
+          <div class="fg">
+            <label>Email <span class="req">*</span></label>
+            <input type="email" id="r-venue-email" placeholder="tuo@locale.it" />
+          </div>
+          <div class="fg">
+            <label>Password <span class="req">*</span></label>
+            <input type="password" id="r-venue-pass" placeholder="min. 8 caratteri" />
+          </div>
+          <div class="alert-error" id="r-venue-error"></div>
+          <button class="btn-primary" onclick="registerVenue()" style="width:100%">
+            <i class="ti ti-building-store"></i> Crea account locale
+          </button>
+          <p class="auth-link">Hai già un account? <a onclick="showLoginForm()">Accedi</a></p>
         </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="l-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginTab()" />
+
+        <div id="form-user" class="reg-form">
+          <div class="form-title">Crea il tuo account</div>
+          <div class="fg">
+            <label>Email <span class="req">*</span></label>
+            <input type="email" id="r-user-email" placeholder="tua@email.it" />
+          </div>
+          <div class="fg">
+            <label>Password <span class="req">*</span></label>
+            <input type="password" id="r-user-pass" placeholder="min. 8 caratteri" />
+          </div>
+          <div class="alert-error" id="r-user-error"></div>
+          <button class="btn-primary" onclick="registerUser()" style="width:100%">
+            <i class="ti ti-user"></i> Crea account
+          </button>
+          <p class="auth-link">Hai già un account? <a onclick="showLoginForm()">Accedi</a></p>
         </div>
-        <div id="l-error" class="alert alert-error"></div>
-        <button class="btn btn-primary" onclick="loginTab()" style="width:100%;justify-content:center">
-          <i class="ti ti-login"></i> Login
-        </button>
-        <p style="font-size:13px;color:var(--text-muted);text-align:center">
-          No account? <a href="register.html" style="color:#E24B4A;text-decoration:none">Register your venue</a>
-        </p>
+
+        <div id="form-login" class="reg-form">
+          <div class="form-title">Accedi</div>
+          <div class="fg">
+            <label>Email</label>
+            <input type="email" id="l-email" placeholder="tua@email.it" />
+          </div>
+          <div class="fg">
+            <label>Password</label>
+            <input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginUser()" />
+          </div>
+          <div class="alert-error" id="l-error"></div>
+          <button class="btn-primary" onclick="loginUser()" style="width:100%">
+            <i class="ti ti-login"></i> Accedi
+          </button>
+          <p class="auth-link">Non hai un account? <a onclick="document.getElementById('form-login').className='reg-form';document.getElementById('form-venue').className='reg-form on'">Registrati</a></p>
+        </div>
       </div>
     </div>
   </div>
+
 </div>
 
 <script>
 var currentSession = null;
+var currentUser = null;
 var allEvents = [];
 var venueEvents = [];
-var isLoading = false;
+var savedEvents = [];
+var isSearching = false;
 
 function checkPassword() {
-  var input = document.getElementById('gate-input').value;
-  if(input === 'eventaigagdariofusignano') {
+  var val = document.getElementById('gate-input').value;
+  if(val === 'eventaigagdariofusignano') {
     document.getElementById('gate').style.display = 'none';
-    localStorage.setItem('eventai_auth','1');
+    document.getElementById('app').style.display = 'block';
+    localStorage.setItem('eai_auth','1');
     initApp();
   } else {
     document.getElementById('gate-error').style.display = 'block';
@@ -199,253 +276,300 @@ function checkPassword() {
 }
 
 document.addEventListener('DOMContentLoaded', function(){
-  if(localStorage.getItem('eventai_auth') === '1') {
-    document.getElementById('gate').style.display = 'none';
+  if(localStorage.getItem('eai_auth')==='1'){
+    document.getElementById('gate').style.display='none';
+    document.getElementById('app').style.display='block';
     initApp();
   }
 });
 
-async function initApp() {
+async function initApp(){
   try {
-    var session = await API.getSession();
-    if(session) {
-      currentSession = session;
-      updateLoginTab(session);
-      showVenueDashboard(session);
-    }
+    var s = await API.getSession();
+    if(s){ currentSession=s; onLoggedIn(s); }
     allEvents = await API.getEvents();
-  } catch(e) { console.error(e); }
+  } catch(e){ console.error(e); }
 }
 
-function updateLoginTab(session) {
-  var label = document.getElementById('login-tab-label');
-  if(session) {
-    label.textContent = session.user.user_metadata.venue_name || 'My venue';
-  } else {
-    label.textContent = 'Login';
-  }
-}
-
-function showTab(t) {
-  document.querySelectorAll('.tab').forEach(function(el){ el.className='tab'; });
-  document.getElementById('tab-'+t).className='tab active';
-  document.querySelectorAll('.nav-tab').forEach(function(el){ el.className='nav-tab'; });
-  var idx = ['find','venues','login'].indexOf(t);
-  document.querySelectorAll('.nav-tab')[idx].className='nav-tab active';
-}
-
-function toggleRange() {
-  var checked = document.getElementById('ev-range-toggle').checked;
-  document.getElementById('ev-range-row').style.display = checked ? 'flex' : 'none';
-}
-
-async function venueLogin() {
-  var email = document.getElementById('v-email').value.trim();
-  var password = document.getElementById('v-password').value;
-  var err = document.getElementById('v-error');
-  err.style.display = 'none';
-  if(!email || !password) { err.textContent='Please fill in all fields.'; err.style.display='block'; return; }
-  try {
-    var data = await API.signIn(email, password);
-    currentSession = data.session;
-    updateLoginTab(data.session);
-    showVenueDashboard(data.session);
-  } catch(e) {
-    err.textContent = 'Invalid email or password.';
-    err.style.display = 'block';
-  }
-}
-
-async function loginTab() {
-  var email = document.getElementById('l-email').value.trim();
-  var password = document.getElementById('l-password').value;
-  var err = document.getElementById('l-error');
-  err.style.display = 'none';
-  if(!email || !password) { err.textContent='Please fill in all fields.'; err.style.display='block'; return; }
-  try {
-    var data = await API.signIn(email, password);
-    currentSession = data.session;
-    updateLoginTab(data.session);
-    showTab('venues');
-    showVenueDashboard(data.session);
-  } catch(e) {
-    err.textContent = 'Invalid email or password.';
-    err.style.display = 'block';
-  }
-}
-
-function showVenueDashboard(session) {
-  document.getElementById('venues-login-wall').style.display = 'none';
-  document.getElementById('venues-dashboard').style.display = 'block';
+function onLoggedIn(session){
+  currentSession = session;
   var meta = session.user.user_metadata;
-  document.getElementById('dash-venue-name').textContent = meta.venue_name || 'My venue';
-  document.getElementById('dash-venue-location').textContent = [meta.neighborhood, meta.city].filter(Boolean).join(', ');
-  loadVenueEvents();
+  var name = meta.venue_name || meta.display_name || session.user.email.split('@')[0];
+  document.getElementById('login-label').textContent = name;
+  document.getElementById('login-icon').className = 'ti ti-settings';
+  if(meta.venue_name){
+    document.getElementById('venues-wall').style.display = 'none';
+    document.getElementById('venues-dash').style.display = 'block';
+    document.getElementById('dash-name').textContent = meta.venue_name;
+    document.getElementById('dash-loc').textContent = [meta.neighborhood, meta.city].filter(Boolean).join(', ');
+    loadVenueEvents();
+  }
 }
 
-async function venueLogout() {
+function showTab(t){
+  document.querySelectorAll('.tab').forEach(function(el){el.className='tab';});
+  document.getElementById('tab-'+t).className='tab active';
+  document.querySelectorAll('.nt').forEach(function(el){el.className='nt';});
+  ['find','venues','login'].forEach(function(id,i){
+    if(id===t) document.querySelectorAll('.nt')[i].className='nt active';
+  });
+  document.getElementById('dropdown').className='dropdown';
+}
+
+function handleLoginBtn(){
+  if(currentSession){
+    var dd=document.getElementById('dropdown');
+    dd.className=dd.className.includes('open')?'dropdown':'dropdown open';
+  } else { showTab('login'); }
+}
+
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#login-btn')&&!e.target.closest('#dropdown')){
+    document.getElementById('dropdown').className='dropdown';
+  }
+});
+
+async function handleLogout(){
   await API.signOut();
-  currentSession = null;
-  updateLoginTab(null);
-  document.getElementById('venues-dashboard').style.display = 'none';
-  document.getElementById('venues-login-wall').style.display = 'flex';
+  currentSession=null;
+  document.getElementById('login-label').textContent='Login';
+  document.getElementById('login-icon').className='ti ti-user';
+  document.getElementById('dropdown').className='dropdown';
+  document.getElementById('venues-wall').style.display='flex';
+  document.getElementById('venues-dash').style.display='none';
+  savedEvents=[];
+  document.getElementById('saved-count').textContent='0';
+  document.getElementById('saved-count').style.display='none';
 }
 
-async function loadVenueEvents() {
+function selectOpt(type){
+  document.getElementById('opt-venue').className='login-opt'+(type==='venue'?' active':'');
+  document.getElementById('opt-user').className='login-opt'+(type==='user'?' active':'');
+  document.getElementById('form-venue').className='reg-form'+(type==='venue'?' on':'');
+  document.getElementById('form-user').className='reg-form'+(type==='user'?' on':'');
+  document.getElementById('form-login').className='reg-form';
+}
+
+function showLoginForm(){
+  document.getElementById('form-venue').className='reg-form';
+  document.getElementById('form-user').className='reg-form';
+  document.getElementById('form-login').className='reg-form on';
+  document.getElementById('opt-venue').className='login-opt';
+  document.getElementById('opt-user').className='login-opt';
+}
+
+async function registerVenue(){
+  var name=document.getElementById('r-venue-name').value.trim();
+  var addr=document.getElementById('r-venue-addr').value.trim();
+  var email=document.getElementById('r-venue-email').value.trim();
+  var pass=document.getElementById('r-venue-pass').value;
+  var desc=document.getElementById('r-venue-desc').value.trim();
+  var err=document.getElementById('r-venue-error');
+  err.style.display='none';
+  if(!name||!addr||!email||!pass){err.textContent='Compila tutti i campi obbligatori.';err.style.display='block';return;}
+  if(pass.length<8){err.textContent='Password di almeno 8 caratteri.';err.style.display='block';return;}
   try {
-    venueEvents = await API.getVenueEvents(currentSession.user.id);
-    renderVenueEvents();
-  } catch(e) { console.error(e); }
+    await API.signUp(email,pass,name,addr,'',desc);
+    err.style.display='none';
+    alert('Account creato! Controlla la tua email per confermare, poi accedi.');
+    showLoginForm();
+  } catch(e){err.textContent=e.message;err.style.display='block';}
 }
 
-function renderVenueEvents() {
-  var list = document.getElementById('events-list');
-  if(venueEvents.length === 0) {
-    list.innerHTML = '<div style="padding:1rem;font-size:14px;color:var(--text-muted)">No events yet. Add your first one!</div>';
+async function registerUser(){
+  var email=document.getElementById('r-user-email').value.trim();
+  var pass=document.getElementById('r-user-pass').value;
+  var err=document.getElementById('r-user-error');
+  err.style.display='none';
+  if(!email||!pass){err.textContent='Compila tutti i campi.';err.style.display='block';return;}
+  if(pass.length<8){err.textContent='Password di almeno 8 caratteri.';err.style.display='block';return;}
+  try {
+    await API.signUp(email,pass,'','','','');
+    alert('Account creato! Controlla la tua email per confermare, poi accedi.');
+    showLoginForm();
+  } catch(e){err.textContent=e.message;err.style.display='block';}
+}
+
+async function loginUser(){
+  var email=document.getElementById('l-email').value.trim();
+  var pass=document.getElementById('l-pass').value;
+  var err=document.getElementById('l-error');
+  err.style.display='none';
+  if(!email||!pass){err.textContent='Compila tutti i campi.';err.style.display='block';return;}
+  try {
+    var data=await API.signIn(email,pass);
+    onLoggedIn(data.session);
+    showTab('find');
+  } catch(e){err.textContent='Email o password errati.';err.style.display='block';}
+}
+
+async function venueLogin(){
+  var email=document.getElementById('v-email').value.trim();
+  var pass=document.getElementById('v-password').value;
+  var err=document.getElementById('v-error');
+  err.style.display='none';
+  if(!email||!pass){err.textContent='Compila tutti i campi.';err.style.display='block';return;}
+  try {
+    var data=await API.signIn(email,pass);
+    onLoggedIn(data.session);
+  } catch(e){err.textContent='Email o password errati.';err.style.display='block';}
+}
+
+function toggleAddForm(){
+  var f=document.getElementById('add-form');
+  f.className=f.className.includes('open')?'add-form':'add-form open';
+  if(f.className.includes('open')) f.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function toggleMultiday(){
+  var checked=document.getElementById('ev-multiday').checked;
+  document.getElementById('multiday-row').className='multiday-row'+(checked?' open':'');
+}
+
+async function loadVenueEvents(){
+  try {
+    venueEvents=await API.getVenueEvents(currentSession.user.id);
+    renderVenueEvents();
+  } catch(e){console.error(e);}
+}
+
+function renderVenueEvents(){
+  var table=document.getElementById('ev-table');
+  if(venueEvents.length===0){
+    table.innerHTML='<div class="empty-state">Nessun evento ancora. Aggiungine uno!</div>';
     return;
   }
-  var icons = {
-    music:{i:'ti-music',bg:'#EEEDFE',c:'#534AB7'},
-    food:{i:'ti-tools-kitchen-2',bg:'#FAECE7',c:'#993C1D'},
-    art:{i:'ti-palette',bg:'#FAEEDA',c:'#854F0B'},
-    sport:{i:'ti-ball-football',bg:'#E1F5EE',c:'#0F6E56'},
-    other:{i:'ti-calendar',bg:'#F1EFE8',c:'#5F5E5A'}
-  };
-  list.innerHTML = venueEvents.map(function(ev) {
-    var s = icons[ev.category] || icons.other;
-    var dateStr = ev.date ? new Date(ev.date).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}) : 'Date TBD';
-    if(ev.date_to) dateStr += ' → ' + new Date(ev.date_to).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-    if(ev.time) dateStr += ' · ' + ev.time.slice(0,5);
-    return '<div class="table-row"><div style="width:34px;height:34px;border-radius:8px;background:'+s.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti '+s.i+'" style="color:'+s.c+';font-size:17px"></i></div><div class="row-info"><div class="row-title">'+ev.title+'</div><div class="row-sub">'+dateStr+'</div></div><span class="status-badge status-live">live</span><div class="row-actions"><button class="icon-btn" onclick="deleteEvent(\''+ev.id+'\')"><i class="ti ti-trash"></i></button></div></div>';
+  var icons={music:{i:'ti-music',bg:'#eef2ff',c:'#4338ca'},food:{i:'ti-tools-kitchen-2',bg:'#fff7ed',c:'#c2410c'},art:{i:'ti-palette',bg:'#fefce8',c:'#a16207'},sport:{i:'ti-ball-football',bg:'#f0fdf4',c:'#15803d'},other:{i:'ti-calendar',bg:'#f8fafc',c:'#64748b'}};
+  table.innerHTML=venueEvents.map(function(ev){
+    var s=icons[ev.category]||icons.other;
+    var d=ev.date?new Date(ev.date).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}):'Data TBD';
+    if(ev.date_to) d+=' → '+new Date(ev.date_to).toLocaleDateString('it-IT',{day:'numeric',month:'short'});
+    if(ev.time) d+=' · '+ev.time.slice(0,5);
+    return '<div class="ev-row"><div class="ev-ic" style="background:'+s.bg+'"><i class="ti '+s.i+'" style="color:'+s.c+'"></i></div><div class="ev-info"><div class="ev-title">'+ev.title+'</div><div class="ev-sub">'+d+'</div></div><div class="ev-acts"><button class="ic-btn" onclick="deleteEvent(\''+ev.id+'\')" aria-label="Elimina"><i class="ti ti-trash"></i></button></div></div>';
   }).join('');
 }
 
-async function addEvent() {
-  var name = document.getElementById('ev-name').value.trim();
-  var date = document.getElementById('ev-date').value;
-  var time = document.getElementById('ev-time').value;
-  var dateTo = document.getElementById('ev-range-toggle').checked ? document.getElementById('ev-date-to').value : null;
-  var desc = document.getElementById('ev-description').value.trim();
-  var err = document.getElementById('ev-error');
-  var suc = document.getElementById('ev-success');
-  var loading = document.getElementById('ev-loading');
-  var btn = document.getElementById('add-btn');
-
-  err.style.display='none';
-  suc.style.display='none';
-  if(!name) { err.textContent='Event name is required.'; err.style.display='block'; return; }
-
-  loading.style.display='inline';
-  btn.disabled=true;
-
+async function addEvent(){
+  var name=document.getElementById('ev-name').value.trim();
+  var date=document.getElementById('ev-date').value;
+  var time=document.getElementById('ev-time').value;
+  var dateTo=document.getElementById('ev-multiday').checked?document.getElementById('ev-date-to').value:null;
+  var loc=document.getElementById('ev-location').value.trim();
+  var desc=document.getElementById('ev-desc').value.trim();
+  var err=document.getElementById('ev-error');
+  var suc=document.getElementById('ev-success');
+  var btn=document.getElementById('add-btn');
+  err.style.display='none'; suc.style.display='none';
+  if(!name){err.textContent='Il nome evento è obbligatorio.';err.style.display='block';return;}
+  if(!date){err.textContent='La data è obbligatoria.';err.style.display='block';return;}
+  btn.disabled=true; btn.innerHTML='<i class="ti ti-loader"></i> Pubblicazione...';
   try {
-    var eventData = {
-      title: name,
-      date: date||null,
-      time: time||null,
-      date_to: dateTo||null,
-      description: desc||null,
-      active: true
-    };
-
-    if(desc) {
+    var eventData={title:name,date:date,time:time||null,date_to:dateTo||null,address:loc||null,description:desc||null,active:true};
+    if(desc){
       try {
-        var res = await fetch('/api/extract', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({text: desc})
-        });
-        var extracted = await res.json();
-        if(extracted.category) eventData.category = extracted.category;
-        if(extracted.entry) eventData.entry = extracted.entry;
-        if(!date && extracted.date) eventData.date = extracted.date;
-        if(!time && extracted.time) eventData.time = extracted.time;
-        if(extracted.description) eventData.description = extracted.description;
-      } catch(e) { console.log('AI extraction skipped'); }
+        var res=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:desc})});
+        var ex=await res.json();
+        if(ex.category) eventData.category=ex.category;
+        if(ex.entry) eventData.entry=ex.entry;
+        if(ex.description) eventData.description=ex.description;
+      } catch(e){}
     }
-
-    await API.addEvent(currentSession.user.id, eventData);
-    suc.textContent = 'Event published!';
-    suc.style.display = 'block';
+    await API.addEvent(currentSession.user.id,eventData);
+    suc.textContent='Evento pubblicato!'; suc.style.display='block';
     document.getElementById('ev-name').value='';
     document.getElementById('ev-date').value='';
     document.getElementById('ev-time').value='';
     document.getElementById('ev-date-to').value='';
-    document.getElementById('ev-description').value='';
-    document.getElementById('ev-range-toggle').checked=false;
-    document.getElementById('ev-range-row').style.display='none';
+    document.getElementById('ev-location').value='';
+    document.getElementById('ev-desc').value='';
+    document.getElementById('ev-multiday').checked=false;
+    document.getElementById('multiday-row').className='multiday-row';
     await loadVenueEvents();
-    setTimeout(function(){ suc.style.display='none'; }, 3000);
-  } catch(e) {
-    err.textContent = 'Error publishing event: ' + e.message;
-    err.style.display = 'block';
-  }
-
-  loading.style.display='none';
-  btn.disabled=false;
+    setTimeout(function(){suc.style.display='none';toggleAddForm();},2000);
+  } catch(e){err.textContent='Errore: '+e.message;err.style.display='block';}
+  btn.disabled=false; btn.innerHTML='<i class="ti ti-sparkles"></i> Pubblica con AI';
 }
 
-async function deleteEvent(id) {
-  if(!confirm('Delete this event?')) return;
-  try {
-    await API.deleteEvent(id);
-    await loadVenueEvents();
-  } catch(e) { alert('Error: '+e.message); }
+async function deleteEvent(id){
+  if(!confirm('Eliminare questo evento?')) return;
+  try{await API.deleteEvent(id);await loadVenueEvents();}catch(e){alert('Errore: '+e.message);}
 }
 
-async function sendMessage() {
-  if(isLoading) return;
-  var inp = document.getElementById('chat-input');
-  var q = inp.value.trim();
-  if(!q) return;
+function saveEvent(eventObj, btn){
+  savedEvents.push(eventObj);
+  btn.innerHTML='<i class="ti ti-bookmark-filled"></i>';
+  btn.style.color='#e24b4a';
+  var c=document.getElementById('saved-count');
+  c.textContent=savedEvents.length;
+  c.style.display='inline';
+}
+
+function showSaved(){
+  document.getElementById('dropdown').className='dropdown';
+  showTab('find');
+  var box=document.getElementById('chat-box');
+  var msg=document.createElement('div'); msg.className='msg ai';
+  var content=savedEvents.length>0
+    ?'<div class="saved-list">'+savedEvents.map(function(e,i){
+        return '<div class="saved-item"><div><div class="ev-title">'+e.title+'</div><div class="ev-sub">'+(e.date?new Date(e.date).toLocaleDateString('it-IT',{day:'numeric',month:'short'}):'')+(e.venues?' · '+e.venues.name:'')+'</div></div><button class="ic-btn" onclick="removeSaved('+i+',this)" aria-label="Rimuovi"><i class="ti ti-x"></i></button></div>';
+      }).join('')+'</div>'
+    :'<span style="color:#aaa">Nessun evento salvato ancora.</span>';
+  msg.innerHTML='<div class="av ai">E</div><div class="bub"><div class="saved-title">I tuoi eventi salvati</div>'+content+'</div>';
+  box.appendChild(msg); box.scrollTop=box.scrollHeight;
+}
+
+function removeSaved(i, btn){
+  savedEvents.splice(i,1);
+  btn.closest('.saved-item').remove();
+  var c=document.getElementById('saved-count');
+  c.textContent=savedEvents.length;
+  if(savedEvents.length===0) c.style.display='none';
+}
+
+async function sendMessage(){
+  if(isSearching) return;
+  var inp=document.getElementById('chat-inp');
+  var q=inp.value.trim(); if(!q) return;
   inp.value='';
-  addMsg(q,'user');
-  addTyping();
-  isLoading=true;
+  addMsg(q,'user'); addTyping(); isSearching=true;
   try {
-    if(allEvents.length===0) allEvents = await API.getEvents();
-    var res = await API.searchWithAI(q, allEvents);
+    if(allEvents.length===0) allEvents=await API.getEvents();
+    var res=await API.searchWithAI(q,allEvents);
     removeTyping();
-    var cards = (res.ids||[]).map(function(i){ return buildCard(allEvents[i-1]); }).filter(Boolean).join('');
-    var html = '<div>'+res.text+'</div>'+(cards?'<div class="event-list">'+cards+'</div>':'')+(res.followup?'<div class="followup"><i class="ti ti-bulb"></i> '+res.followup+'</div>':'');
+    var cards=(res.ids||[]).map(function(i){return buildCard(allEvents[i-1]);}).filter(Boolean).join('');
+    var html='<div>'+res.text+'</div>'+(cards?'<div class="ev-results">'+cards+'</div>':'')+(res.followup?'<div class="followup"><i class="ti ti-bulb"></i> '+res.followup+'</div>':'');
     addMsg(html,'ai');
-  } catch(e) {
-    removeTyping();
-    addMsg('Sorry, something went wrong. Please try again.','ai');
-  }
-  isLoading=false;
+  } catch(e){removeTyping();addMsg('Spiacente, qualcosa è andato storto. Riprova.','ai');}
+  isSearching=false;
 }
 
-function buildCard(e) {
+function buildCard(e){
   if(!e) return '';
-  var isFree=(e.entry||'').toLowerCase()==='free';
-  var date=e.date?new Date(e.date).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}):'';
-  var cats={music:{bg:'#EEEDFE',c:'#534AB7',i:'ti-music'},food:{bg:'#FAECE7',c:'#993C1D',i:'ti-tools-kitchen-2'},art:{bg:'#FAEEDA',c:'#854F0B',i:'ti-palette'},sport:{bg:'#E1F5EE',c:'#0F6E56',i:'ti-ball-football'},other:{bg:'#F1EFE8',c:'#5F5E5A',i:'ti-calendar'}};
+  var isFree=(e.entry||'').toLowerCase()==='free'||(e.entry||'').toLowerCase()==='gratuito';
+  var d=e.date?new Date(e.date).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}):'';
+  if(e.time) d+=' · '+e.time.slice(0,5);
+  var cats={music:{bg:'#eef2ff',c:'#4338ca',i:'ti-music'},food:{bg:'#fff7ed',c:'#c2410c',i:'ti-tools-kitchen-2'},art:{bg:'#fefce8',c:'#a16207',i:'ti-palette'},sport:{bg:'#f0fdf4',c:'#15803d',i:'ti-ball-football'},other:{bg:'#f8fafc',c:'#64748b',i:'ti-calendar'}};
   var s=cats[e.category]||cats.other;
-  return '<div class="event-card"><div class="event-icon" style="background:'+s.bg+'"><i class="ti '+s.i+'" style="color:'+s.c+'"></i></div><div style="flex:1"><div class="event-title">'+e.title+'</div><div class="event-meta"><span><i class="ti ti-clock"></i>'+date+(e.time?' · '+e.time.slice(0,5):'')+'</span><span><i class="ti ti-map-pin"></i>'+(e.venues?e.venues.name+' · '+(e.venues.neighborhood||e.venues.city):'')+'</span><span class="badge '+(isFree?'badge-free':'badge-paid')+'">'+(isFree?'free':'paid')+'</span></div></div></div>';
+  var ev=e;
+  return '<div class="ev-card"><div class="ev-ic" style="background:'+s.bg+'"><i class="ti '+s.i+'" style="color:'+s.c+'"></i></div><div class="ev-info"><div class="ev-title">'+e.title+'</div><div class="ev-sub">'+(e.venues?'<i class="ti ti-map-pin"></i> '+e.venues.name+(e.venues.neighborhood?' · '+e.venues.neighborhood:''):'')+' '+d+'</div><div class="ev-badges"><span class="bdg '+(isFree?'bdg-free':'bdg-paid')+'">'+(isFree?'gratuito':'a pagamento')+'</span></div></div><button class="save-btn" onclick="saveEvent('+JSON.stringify(e).replace(/"/g,"'")+',this)" aria-label="Salva"><i class="ti ti-bookmark"></i></button></div>';
 }
 
-function addMsg(html,type) {
+function addMsg(html,type){
   var box=document.getElementById('chat-box');
-  var d=document.createElement('div');
-  d.className='msg '+(type==='user'?'user':'ai');
-  d.innerHTML='<div class="avatar">'+(type==='user'?'You':'E')+'</div><div class="bubble">'+html+'</div>';
-  box.appendChild(d);
-  box.scrollTop=box.scrollHeight;
+  var d=document.createElement('div'); d.className='msg '+(type==='user'?'user':'ai');
+  d.innerHTML='<div class="av '+(type==='user'?'user':'ai')+'">'+(type==='user'?'Tu':'E')+'</div><div class="bub">'+html+'</div>';
+  box.appendChild(d); box.scrollTop=box.scrollHeight;
 }
 
-function addTyping() {
+function addTyping(){
   var box=document.getElementById('chat-box');
-  var d=document.createElement('div');
-  d.className='msg ai';
-  d.id='typing';
-  d.innerHTML='<div class="avatar">E</div><div class="bubble"><div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
-  box.appendChild(d);
-  box.scrollTop=box.scrollHeight;
+  var d=document.createElement('div'); d.className='msg ai'; d.id='typing';
+  d.innerHTML='<div class="av ai">E</div><div class="bub"><div class="dots"><span></span><span></span><span></span></div></div>';
+  box.appendChild(d); box.scrollTop=box.scrollHeight;
 }
 
 function removeTyping(){ var t=document.getElementById('typing'); if(t)t.remove(); }
-function sendQ(t){ document.getElementById('chat-input').value=t; sendMessage(); }
+function sendQ(q){ document.getElementById('chat-inp').value=q; sendMessage(); }
 </script>
 </body>
 </html>
