@@ -8,6 +8,39 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
 </head>
 <body>
+  
+  <div id="gate" style="position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="background:#f8f8f8;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;padding:2rem;width:320px;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div style="width:32px;height:32px;border-radius:8px;background:#E24B4A;display:flex;align-items:center;justify-content:center">
+        <i class="ti ti-map-pin" style="color:#fff;font-size:17px"></i>
+      </div>
+      <span style="font-size:20px;font-weight:500">event<strong style="color:#E24B4A">ai</strong></span>
+    </div>
+    <p style="font-size:13px;color:#666">This site is currently in private beta.</p>
+    <input type="password" id="gate-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkPassword()" style="border:0.5px solid rgba(0,0,0,0.15);border-radius:8px;padding:10px 12px;font-size:14px;outline:none;font-family:inherit" />
+    <button onclick="checkPassword()" style="background:#E24B4A;color:#fff;border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:500;cursor:pointer">Enter</button>
+    <p id="gate-error" style="font-size:13px;color:#A32D2D;display:none;text-align:center">Wrong password. Try again.</p>
+  </div>
+</div>
+
+<script>
+  function checkPassword() {
+    const input = document.getElementById('gate-input').value;
+    if (input === 'eventaigagdariofusignano') {
+      document.getElementById('gate').style.display = 'none';
+      localStorage.setItem('eventai_auth', '1');
+    } else {
+      document.getElementById('gate-error').style.display = 'block';
+    }
+  }
+  if (localStorage.getItem('eventai_auth') === '1') {
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('gate').style.display = 'none';
+    });
+  }
+</script>
+  
   <div id="app">
 
     <nav class="navbar">
