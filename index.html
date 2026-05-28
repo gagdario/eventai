@@ -112,28 +112,25 @@
               <label>Event name <span style="color:#E24B4A">*</span></label>
               <input type="text" id="ev-name" placeholder="e.g. Jazz night, aperitivo, DJ set..." />
             </div>
-
             <div class="form-group">
               <label>Date <span style="font-size:12px;color:var(--text-muted)">(optional)</span></label>
-              <div style="display:flex;align-items:center;gap:10px">
+              <div style="display:flex;align-items:center;gap:8px">
                 <input type="date" id="ev-date" style="flex:1" />
-                <input type="time" id="ev-time" style="flex:1" placeholder="Time (optional)" />
+                <input type="time" id="ev-time" style="flex:1" />
               </div>
               <label class="range-toggle">
                 <input type="checkbox" id="ev-range-toggle" onchange="toggleRange()" />
                 <span>Multi-day event</span>
               </label>
-              <div id="ev-range-row" style="display:none;align-items:center;gap:10px;margin-top:6px">
+              <div id="ev-range-row" style="display:none;align-items:center;gap:8px;margin-top:4px">
                 <span style="font-size:13px;color:var(--text-muted);white-space:nowrap">End date</span>
                 <input type="date" id="ev-date-to" style="flex:1" />
               </div>
             </div>
-
             <div class="form-group">
               <label>Description <span style="font-size:12px;color:var(--text-muted)">(paste anything — AI cleans it up)</span></label>
               <textarea id="ev-description" placeholder="Paste a WhatsApp message, Instagram caption, or write freely. AI will extract and clean all details automatically."></textarea>
             </div>
-
             <div style="display:flex;align-items:center;gap:10px">
               <button class="btn btn-primary" onclick="addEvent()" id="add-btn">
                 <i class="ti ti-sparkles"></i> Publish with AI
@@ -201,28 +198,31 @@ function checkPassword() {
   }
 }
 
-if(localStorage.getItem('eventai_auth') === '1') {
-  document.addEventListener('DOMContentLoaded', function(){
+document.addEventListener('DOMContentLoaded', function(){
+  if(localStorage.getItem('eventai_auth') === '1') {
     document.getElementById('gate').style.display = 'none';
     initApp();
-  });
-}
+  }
+});
 
 async function initApp() {
-  const session = await API.getSession();
-  if(session) {
-    currentSession = session;
-    updateLoginTab(session);
-    showVenueDashboard(session);
-  }
-  try { allEvents = await API.getEvents(); } catch(e) { console.error(e); }
+  try {
+    var session = await API.getSession();
+    if(session) {
+      currentSession = session;
+      updateLoginTab(session);
+      showVenueDashboard(session);
+    }
+    allEvents = await API.getEvents();
+  } catch(e) { console.error(e); }
 }
 
 function updateLoginTab(session) {
+  var label = document.getElementById('login-tab-label');
   if(session) {
-    document.getElementById('login-tab-label').textContent = session.user.user_metadata.venue_name || 'My venue';
+    label.textContent = session.user.user_metadata.venue_name || 'My venue';
   } else {
-    document.getElementById('login-tab-label').textContent = 'Login';
+    label.textContent = 'Login';
   }
 }
 
@@ -236,8 +236,7 @@ function showTab(t) {
 
 function toggleRange() {
   var checked = document.getElementById('ev-range-toggle').checked;
-  var row = document.getElementById('ev-range-row');
-  row.style.display = checked ? 'flex' : 'none';
+  document.getElementById('ev-range-row').style.display = checked ? 'flex' : 'none';
 }
 
 async function venueLogin() {
@@ -305,7 +304,13 @@ function renderVenueEvents() {
     list.innerHTML = '<div style="padding:1rem;font-size:14px;color:var(--text-muted)">No events yet. Add your first one!</div>';
     return;
   }
-  var icons = { music:{i:'ti-music',bg:'#EEEDFE',c:'#534AB7'}, food:{i:'ti-tools-kitchen-2',bg:'#FAECE7',c:'#993C1D'}, art:{i:'ti-palette',bg:'#FAEEDA',c:'#854F0B'}, sport:{i:'ti-ball-football',bg:'#E1F5EE',c:'#0F6E56'}, other:{i:'ti-calendar',bg:'#F1EFE8',c:'#5F5E5A'} };
+  var icons = {
+    music:{i:'ti-music',bg:'#EEEDFE',c:'#534AB7'},
+    food:{i:'ti-tools-kitchen-2',bg:'#FAECE7',c:'#993C1D'},
+    art:{i:'ti-palette',bg:'#FAEEDA',c:'#854F0B'},
+    sport:{i:'ti-ball-football',bg:'#E1F5EE',c:'#0F6E56'},
+    other:{i:'ti-calendar',bg:'#F1EFE8',c:'#5F5E5A'}
+  };
   list.innerHTML = venueEvents.map(function(ev) {
     var s = icons[ev.category] || icons.other;
     var dateStr = ev.date ? new Date(ev.date).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}) : 'Date TBD';
@@ -326,17 +331,30 @@ async function addEvent() {
   var loading = document.getElementById('ev-loading');
   var btn = document.getElementById('add-btn');
 
-  err.style.display='none'; suc.style.display='none';
+  err.style.display='none';
+  suc.style.display='none';
   if(!name) { err.textContent='Event name is required.'; err.style.display='block'; return; }
 
-  loading.style.display='inline'; btn.disabled=true;
+  loading.style.display='inline';
+  btn.disabled=true;
 
   try {
-    var eventData = { title: name, date: date||null, time: time||null, date_to: dateTo||null, description: desc||null, active: true };
+    var eventData = {
+      title: name,
+      date: date||null,
+      time: time||null,
+      date_to: dateTo||null,
+      description: desc||null,
+      active: true
+    };
 
     if(desc) {
       try {
-        var res = await fetch('/api/extract', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text: desc}) });
+        var res = await fetch('/api/extract', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({text: desc})
+        });
         var extracted = await res.json();
         if(extracted.category) eventData.category = extracted.category;
         if(extracted.entry) eventData.entry = extracted.entry;
@@ -359,24 +377,31 @@ async function addEvent() {
     await loadVenueEvents();
     setTimeout(function(){ suc.style.display='none'; }, 3000);
   } catch(e) {
-    err.textContent = 'Error publishing event. Try again.';
+    err.textContent = 'Error publishing event: ' + e.message;
     err.style.display = 'block';
   }
 
-  loading.style.display='none'; btn.disabled=false;
+  loading.style.display='none';
+  btn.disabled=false;
 }
 
 async function deleteEvent(id) {
   if(!confirm('Delete this event?')) return;
-  try { await API.deleteEvent(id); await loadVenueEvents(); } catch(e) { alert('Error: '+e.message); }
+  try {
+    await API.deleteEvent(id);
+    await loadVenueEvents();
+  } catch(e) { alert('Error: '+e.message); }
 }
 
 async function sendMessage() {
   if(isLoading) return;
   var inp = document.getElementById('chat-input');
-  var q = inp.value.trim(); if(!q) return;
+  var q = inp.value.trim();
+  if(!q) return;
   inp.value='';
-  addMsg(q,'user'); addTyping(); isLoading=true;
+  addMsg(q,'user');
+  addTyping();
+  isLoading=true;
   try {
     if(allEvents.length===0) allEvents = await API.getEvents();
     var res = await API.searchWithAI(q, allEvents);
@@ -384,7 +409,10 @@ async function sendMessage() {
     var cards = (res.ids||[]).map(function(i){ return buildCard(allEvents[i-1]); }).filter(Boolean).join('');
     var html = '<div>'+res.text+'</div>'+(cards?'<div class="event-list">'+cards+'</div>':'')+(res.followup?'<div class="followup"><i class="ti ti-bulb"></i> '+res.followup+'</div>':'');
     addMsg(html,'ai');
-  } catch(e) { removeTyping(); addMsg('Sorry, something went wrong. Please try again.','ai'); }
+  } catch(e) {
+    removeTyping();
+    addMsg('Sorry, something went wrong. Please try again.','ai');
+  }
   isLoading=false;
 }
 
@@ -392,23 +420,28 @@ function buildCard(e) {
   if(!e) return '';
   var isFree=(e.entry||'').toLowerCase()==='free';
   var date=e.date?new Date(e.date).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}):'';
-  var catColors={music:{bg:'#EEEDFE',c:'#534AB7',i:'ti-music'},food:{bg:'#FAECE7',c:'#993C1D',i:'ti-tools-kitchen-2'},art:{bg:'#FAEEDA',c:'#854F0B',i:'ti-palette'},sport:{bg:'#E1F5EE',c:'#0F6E56',i:'ti-ball-football'},other:{bg:'#F1EFE8',c:'#5F5E5A',i:'ti-calendar'}};
-  var s=catColors[e.category]||catColors.other;
+  var cats={music:{bg:'#EEEDFE',c:'#534AB7',i:'ti-music'},food:{bg:'#FAECE7',c:'#993C1D',i:'ti-tools-kitchen-2'},art:{bg:'#FAEEDA',c:'#854F0B',i:'ti-palette'},sport:{bg:'#E1F5EE',c:'#0F6E56',i:'ti-ball-football'},other:{bg:'#F1EFE8',c:'#5F5E5A',i:'ti-calendar'}};
+  var s=cats[e.category]||cats.other;
   return '<div class="event-card"><div class="event-icon" style="background:'+s.bg+'"><i class="ti '+s.i+'" style="color:'+s.c+'"></i></div><div style="flex:1"><div class="event-title">'+e.title+'</div><div class="event-meta"><span><i class="ti ti-clock"></i>'+date+(e.time?' · '+e.time.slice(0,5):'')+'</span><span><i class="ti ti-map-pin"></i>'+(e.venues?e.venues.name+' · '+(e.venues.neighborhood||e.venues.city):'')+'</span><span class="badge '+(isFree?'badge-free':'badge-paid')+'">'+(isFree?'free':'paid')+'</span></div></div></div>';
 }
 
 function addMsg(html,type) {
   var box=document.getElementById('chat-box');
-  var d=document.createElement('div'); d.className='msg '+(type==='user'?'user':'ai');
+  var d=document.createElement('div');
+  d.className='msg '+(type==='user'?'user':'ai');
   d.innerHTML='<div class="avatar">'+(type==='user'?'You':'E')+'</div><div class="bubble">'+html+'</div>';
-  box.appendChild(d); box.scrollTop=box.scrollHeight;
+  box.appendChild(d);
+  box.scrollTop=box.scrollHeight;
 }
 
 function addTyping() {
   var box=document.getElementById('chat-box');
-  var d=document.createElement('div'); d.className='msg ai'; d.id='typing';
+  var d=document.createElement('div');
+  d.className='msg ai';
+  d.id='typing';
   d.innerHTML='<div class="avatar">E</div><div class="bubble"><div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
-  box.appendChild(d); box.scrollTop=box.scrollHeight;
+  box.appendChild(d);
+  box.scrollTop=box.scrollHeight;
 }
 
 function removeTyping(){ var t=document.getElementById('typing'); if(t)t.remove(); }
