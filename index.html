@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventAI — Find events near you</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+</head>
+<body>
+  <div id="app">
+
+    <nav class="navbar">
+      <div class="logo">
+        <i class="ti ti-map-pin"></i>
+        <span>event<strong>ai</strong></span>
+      </div>
+      <div class="nav-links">
+        <a href="index.html" class="active">Find events</a>
+        <a href="venue.html">For venues</a>
+        <a href="login.html">Login</a>
+      </div>
+    </nav>
+
+    <main class="hero">
+      <h1>Find the perfect event<br/>with AI</h1>
+      <p class="subtitle">Ask anything — EventAI searches for you</p>
+
+      <div class="suggestions">
+        <span class="sug" onclick="sendQ('live music tonight in Milan for free')">live music tonight free</span>
+        <span class="sug" onclick="sendQ('something to do on Sunday with kids')">Sunday with kids</span>
+        <span class="sug" onclick="sendQ('aperitivo with DJ set Navigli area')">aperitivo DJ set Navigli</span>
+        <span class="sug" onclick="sendQ('free events this weekend Milan')">free events this weekend</span>
+      </div>
+
+      <div class="chat-container">
+        <div class="chat-box" id="chat-box">
+          <div class="msg ai">
+            <div class="avatar">E</div>
+            <div class="bubble">Hi! I'm EventAI. Tell me what you're looking for and I'll find the perfect events for you.</div>
+          </div>
+        </div>
+        <div class="chat-footer">
+          <input
+            type="text"
+            id="chat-input"
+            placeholder="e.g. free concerts tonight in Milan..."
+            onkeydown="if(event.key==='Enter') sendMessage()"
+          />
+          <button onclick="sendMessage()"><i class="ti ti-send"></i></button>
+        </div>
+      </div>
+    </main>
+
+  </div>
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
