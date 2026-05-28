@@ -638,17 +638,50 @@ function buildCard(e){
   var isFree=(e.entry||'').toLowerCase()==='free'||(e.entry||'').toLowerCase()==='gratuito';
   var d=e.date?new Date(e.date).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}):'';
   if(e.time) d+=' · '+e.time.slice(0,5);
-  var desc=e.description?'<div class="ev-desc-preview">'+e.description.substring(0,100)+(e.description.length>100?'...':'')+'</div>':'';
-  return '<div class="ev-card">'+
-    '<div class="ev-info">'+
-      '<div class="ev-title">'+e.title+'</div>'+
-      '<div class="ev-sub">'+(e.venues?'<i class="ti ti-map-pin"></i> '+e.venues.venue_name+(e.venues.address?' · '+e.venues.address:''):'')+' '+d+'</div>'+
-      desc+
-      '<div class="ev-badges"><span class="bdg '+(isFree?'bdg-free':'bdg-paid')+'">'+(isFree?'gratuito':'a pagamento')+'</span></div>'+
+  if(e.date_to) d+=' → '+new Date(e.date_to).toLocaleDateString('it-IT',{day:'numeric',month:'short'});
+
+  var cats={
+    music:{bg:'#eef2ff',c:'#4338ca',i:'ti-music',bdg:'bdg-music',label:'Musica'},
+    food:{bg:'#fff7ed',c:'#c2410c',i:'ti-tools-kitchen-2',bdg:'bdg-food',label:'Food'},
+    art:{bg:'#fefce8',c:'#a16207',i:'ti-palette',bdg:'bdg-art',label:'Arte'},
+    sport:{bg:'#f0fdf4',c:'#15803d',i:'ti-ball-football',bdg:'bdg-sport',label:'Sport'},
+    other:{bg:'#f8fafc',c:'#64748b',i:'ti-calendar',bdg:'bdg-other',label:'Altro'}
+  };
+  var s=cats[e.category]||cats.other;
+  var venueName=e.venues?e.venues.venue_name:'';
+  var venueAddr=e.venues?e.venues.address:'';
+  var desc=e.description||'';
+  var cardId='card-'+Math.random().toString(36).substr(2,9);
+
+  return '<div class="ev-card" id="'+cardId+'" onclick="toggleCard(\''+cardId+'\')">'+
+    '<div class="ev-card-header">'+
+      '<div class="ev-card-icon" style="background:'+s.bg+'"><i class="ti '+s.i+'" style="color:'+s.c+'"></i></div>'+
+      '<div class="ev-card-main">'+
+        '<div class="ev-card-title">'+e.title+'</div>'+
+        '<div class="ev-card-meta">'+
+          (d?'<span><i class="ti ti-clock"></i>'+d+'</span>':'')+
+          (venueName?'<span><i class="ti ti-building-store"></i>'+venueName+'</span>':'')+
+          '<span class="bdg '+(isFree?'bdg-free':'bdg-paid')+'">'+(isFree?'✓ Gratuito':'A pagamento')+'</span>'+
+        '</div>'+
+      '</div>'+
+      '<i class="ti ti-chevron-down ev-card-chevron"></i>'+
     '</div>'+
+    (desc||venueAddr?
+      '<div class="ev-card-body">'+
+        (desc?'<div class="ev-card-desc">'+desc+'</div>':'')+
+        '<div class="ev-card-footer">'+
+          (venueAddr?'<div class="ev-card-address"><i class="ti ti-map-pin"></i>'+venueAddr+'</div>':'')+
+          '<span class="bdg '+s.bdg+'"><i class="ti '+s.i+'"></i>'+s.label+'</span>'+
+        '</div>'+
+      '</div>'
+    :'')+
   '</div>';
 }
 
+function toggleCard(id){
+  var card=document.getElementById(id);
+  if(card) card.className=card.className.includes('open')?'ev-card':'ev-card open';
+}
 function addMsg(html,type){
   var box=document.getElementById('chat-box');
   var d=document.createElement('div');
