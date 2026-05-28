@@ -1,180 +1,48 @@
-/* EVENT CARDS ENHANCED */
-.ev-results {
-  margin-top: 12px;
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --red: #e24b4a;
+  --red-dark: #c13a39;
+  --red-light: #fff0f0;
+  --text: #1a1a1a;
+  --text-muted: #888;
+  --text-light: #aaa;
+  --border: #ebebeb;
+  --bg: #fff;
+  --bg-soft: #f8f8f8;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+#gate {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 1.5rem;
+}
+
+.gate-card {
+  width: 100%;
+  max-width: 360px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.ev-card {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  cursor: pointer;
-  transition: box-shadow .2s, transform .2s;
-}
-
-.ev-card:hover {
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  transform: translateY(-1px);
-}
-
-.ev-card-header {
-  display: flex;
+  gap: 14px;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-}
-
-.ev-card-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-size: 20px;
-}
-
-.ev-card-main { flex: 1; min-width: 0; }
-
-.ev-card-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ev-card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text-muted);
-  align-items: center;
-}
-
-.ev-card-meta i { font-size: 13px; vertical-align: -2px; margin-right: 2px; }
-
-.ev-card-chevron {
-  color: var(--text-light);
-  font-size: 18px;
-  transition: transform .2s;
-  flex-shrink: 0;
-}
-
-.ev-card.open .ev-card-chevron {
-  transform: rotate(180deg);
-}
-
-.ev-card-body {
-  display: none;
-  padding: 0 14px 14px;
-  border-top: 1px solid var(--border);
-  margin-top: 0;
-}
-
-.ev-card.open .ev-card-body {
-  display: block;
-}
-
-.ev-card-desc {
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.6;
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-.ev-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 10px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.ev-card-address {
-  font-size: 12px;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* BADGES */
-.bdg {
-  font-size: 11px;
-  padding: 3px 9px;
-  border-radius: 20px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.bdg-free { background: #ecfdf5; color: #065f46; }
-.bdg-paid { background: #fff7ed; color: #9a3412; }
-.bdg-music { background: #eef2ff; color: #3730a3; }
-.bdg-food { background: #fff7ed; color: #9a3412; }
-.bdg-art { background: #fefce8; color: #854d0e; }
-.bdg-sport { background: #f0fdf4; color: #166534; }
-.bdg-other { background: #f8fafc; color: #475569; }
-
-/* VENUE EVENTS TABLE ENHANCED */
-.ev-row {
-  display: flex;
-  align-items: flex-start;
-  padding: 14px 16px;
-  gap: 12px;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: background .15s;
-}
-
-.ev-row:hover { background: var(--bg-soft); }
-.ev-row:last-child { border-bottom: none; }
-
-.ev-ic {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-size: 19px;
-}
-
-.ev-info { flex: 1; min-width: 0; }
-
-.ev-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 3px;
-}
-
-.ev-sub {
-  font-size: 12px;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.ev-desc-preview {
-  font-size: 12px;
-  color: var(--text-light);
-  margin-top: 4px;
-  line-height: 1.5;
-}
-
-.ev-acts { display: flex; gap: 5px; flex-shrink: 0; padding-top: 2px; }
+  text-alig
