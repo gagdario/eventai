@@ -13,9 +13,8 @@ var API = {
     var db = getDB();
     var result = await db
       .from('events')
-      .select('*, venues(name, city, neighborhood)')
+      .select('*, venues(venue_name, city, address)')
       .eq('active', true)
-      .gte('date', new Date().toISOString().split('T')[0])
       .order('date', { ascending: true });
     if (result.error) throw result.error;
     return result.data || [];
@@ -62,7 +61,7 @@ var API = {
     return result.data || [];
   },
 
-async signUp(email, password, venueName, address, neighborhood, description) {
+  async signUp(email, password, venueName, address, neighborhood, description) {
     var db = getDB();
     var result = await db.auth.signUp({
       email,
@@ -72,7 +71,6 @@ async signUp(email, password, venueName, address, neighborhood, description) {
           venue_name: venueName || '',
           address: address || '',
           city: '',
-          neighborhood: neighborhood || '',
           description: description || '',
           is_venue: venueName ? 'true' : 'false',
         }
@@ -99,6 +97,13 @@ async signUp(email, password, venueName, address, neighborhood, description) {
     var db = getDB();
     var result = await db.auth.getSession();
     return result.data.session;
+  },
+
+  async updateUserMeta(data) {
+    var db = getDB();
+    var result = await db.auth.updateUser({ data: data });
+    if (result.error) throw result.error;
+    return result.data;
   },
 
   async searchWithAI(query, events) {
